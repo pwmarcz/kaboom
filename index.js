@@ -87,13 +87,9 @@ class Game {
     }
 
     let n = 0;
-    for (let y0 = y - 1; y0 <= y + 1; y0++) {
-      for (let x0 = x - 1; x0 <= x + 1; x0++) {
-        if (0 <= x0 && x0 < this.width &&
-          0 <= y0 && y0 < this.height &&
-          this.mines[y0][x0]) {
-            n++;
-          }
+    for (const [x0, y0] of neighbors(x, y, this.width, this.height)) {
+      if (this.mines[y0][x0]) {
+        n++;
       }
     }
 
@@ -105,14 +101,8 @@ class Game {
     }
 
     if (n == 0) {
-      for (let y0 = y - 1; y0 <= y + 1; y0++) {
-        for (let x0 = x - 1; x0 <= x + 1; x0++) {
-          if (0 <= x0 && x0 < this.width &&
-            0 <= y0 && y0 < this.height &&
-            (y0 != y || x0 != x)) {
-              this.reveal(x0, y0);
-            }
-        }
+      for (const [x0, y0] of neighbors(x, y, this.width, this.height)) {
+        this.reveal(x0, y0);
       }
     }
   }
@@ -169,6 +159,18 @@ class Game {
       case State.DEAD:
         this.stateElement.innerText = 'You lose!';
         break;
+    }
+  }
+}
+
+function* neighbors(x, y, width, height) {
+  for (let y0 = y - 1; y0 <= y + 1; y0++) {
+    for (let x0 = x - 1; x0 <= x + 1; x0++) {
+      if (0 <= x0 && x0 < width &&
+        0 <= y0 && y0 < height &&
+        (y0 != y || x0 != x)) {
+          yield [x0, y0];
+        }
     }
   }
 }
