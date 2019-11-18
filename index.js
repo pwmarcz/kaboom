@@ -113,13 +113,13 @@ class Game {
 
   recalc() {
     this.boundary = getBoundary(this.labels, this.width, this.height);
-    this.configurations = findConfigurations(this.boundary, this.labels, this.width, this.height, this.numMines);
+    this.shapes = findShapes(this.boundary, this.labels, this.width, this.height, this.numMines);
 
     this.hints = makeGrid(this.width, this.height, null);
     for (let i = 0; i < this.boundary.length; i++) {
       const [x, y] = this.boundary[i];
       let hasTrue = false, hasFalse = false;
-      for (let [config, remaining] of this.configurations) {
+      for (let [config, remaining] of this.shapes) {
         if (config[i]) {
           hasTrue = true;
         } else {
@@ -235,7 +235,7 @@ function getBoundary(labels, width, height) {
   return boundary;
 }
 
-function findConfigurations(boundary, labels, width, height, numMines) {
+function findShapes(boundary, labels, width, height, numMines) {
   const mines = new Array(boundary.length).fill(false);
   let remaining = numMines;
   const results = [];
