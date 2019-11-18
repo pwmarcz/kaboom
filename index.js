@@ -133,7 +133,7 @@ class Game {
       } else if (hasTrue && !hasFalse) {
         hint = Hint.MINE;
       } else if (!hasTrue && hasFalse) {
-        hint = Hint.EMPTY;
+        hint = Hint.SAFE;
       }
       this.hints[y][x] = hint;
     }
