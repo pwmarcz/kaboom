@@ -72,28 +72,43 @@ class Game {
       return;
     }
 
-    let hasSafeOptions = false;
+    let hasSafeCells = false;
     for (let i = 0; i < this.map.boundary.length; i++) {
       const dangerousShapes = this.shapes.filter(shape => shape.mines[i]);
       if (dangerousShapes.length === 0) {
-        hasSafeOptions = true;
+        hasSafeCells = true;
         break;
+      }
+    }
+
+    let outsideIsSafe = true;
+    for (const shape of this.shapes) {
+      if (shape.remaining > 0) {
+        outsideIsSafe = false;
       }
     }
 
     let mineGrid;
     if (this.map.boundaryGrid[y][x] === null) {
       // Clicked somewhere outside of boundary.
-      // Select a random shape. TODO: something more clever here.
-      const shape = choice(this.shapes);
-      mineGrid = shape.mineGrid();
+
+      if (outsideIsSafe || !hasSafeCells) {
+        const shape = choice(this.shapes);
+        mineGrid = shape.mineGridWithEmpty(x, y);
+      } else {
+        const dangerousShapes = this.shapes.filter(shape => shape.remaining > 0);
+        const shape = choice(dangerousShapes);
+        mineGrid = shape.mineGridWithMine(x, y);
+      }
     } else {
+      // Clicked on boundary.
+
       const idx = this.map.boundaryGrid[y][x];
       const safeShapes = this.shapes.filter(shape => !shape.mines[idx]);
       const dangerousShapes = this.shapes.filter(shape => shape.mines[idx]);
 
       let shape;
-      if (safeShapes.length > 0 && (dangerousShapes.length === 0 || !hasSafeOptions)) {
+      if (safeShapes.length > 0 && (dangerousShapes.length === 0 || !hasSafeCells)) {
         shape = choice(safeShapes);
       } else {
         shape = choice(dangerousShapes);
@@ -277,23 +292,25 @@ class Shape {
     this.remaining = remaining;
   }
 
-  mineGrid() {
-    const mineGrid = makeGrid(this.map.width, this.map.height);
-
+  baseMineGrid() {
+    const mineGrid = makeGrid(this.map.width, this.map.height, false);
     for (let i = 0; i < this.mines.length; i++) {
       if (this.mines[i]) {
         const [x, y] = this.map.boundary[i];
         mineGrid[y][x] = true;
       }
     }
-    const remaining = this.remaining;
+    return mineGrid;
+  }
 
+  addRandom(mineGrid, remaining, exceptX, exceptY) {
     if (remaining > 0) {
       const toSelect = [];
       for (let y = 0; y < this.map.height; y++) {
         for (let x = 0; x < this.map.width; x++) {
-          if (this.map.labels[y][x] === null && this.map.boundaryGrid[y][x] === null) {
-            toSelect.push([x, y]);
+          if (this.map.labels[y][x] === null && this.map.boundaryGrid[y][x] === null
+            && !(x === exceptX && y === exceptY)) {
+              toSelect.push([x, y]);
           }
         }
       }
@@ -304,6 +321,25 @@ class Shape {
       }
     }
 
+    return mineGrid;
+  }
+
+  mineGrid() {
+    const mineGrid = this.baseMineGrid();
+    this.addRandom(mineGrid, this.remaining);
+    return mineGrid;
+  }
+
+  mineGridWithMine(x, y) {
+    const mineGrid = this.baseMineGrid();
+    mineGrid[y][x] = true;
+    this.addRandom(mineGrid, this.remaining - 1, x, y);
+    return mineGrid;
+  }
+
+  mineGridWithEmpty(x, y) {
+    const mineGrid = this.baseMineGrid();
+    this.addRandom(mineGrid, this.remaining, x, y);
     return mineGrid;
   }
 }
