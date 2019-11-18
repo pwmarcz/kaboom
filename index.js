@@ -16,7 +16,7 @@ class Game {
     this.width = 10;
     this.height = 10;
     this.numMines = 20;
-    this.labels = makeGrid(this.width, this.height, null);
+    this.map = new Map(this.width, this.height);
     this.mines = makeGrid(this.width, this.height, false);
     this.flags = makeGrid(this.width, this.height, false);
     this.numRevealed = 0;
@@ -81,7 +81,7 @@ class Game {
   }
 
   reveal(x, y) {
-    if (!(this.state == State.PLAYING && this.labels[y][x] === null && !this.flags[y][x])) {
+    if (!(this.state == State.PLAYING && this.map.labels[y][x] === null && !this.flags[y][x])) {
       return;
     }
 
@@ -97,7 +97,7 @@ class Game {
       }
     }
 
-    this.labels[y][x] = n;
+    this.map.reveal(x, y, n);
     this.numRevealed++;
     if (this.numRevealed + this.numMines === this.width * this.height) {
       this.state = State.WIN;
@@ -112,12 +112,11 @@ class Game {
   }
 
   recalc() {
-    this.boundary = getBoundary(this.labels, this.width, this.height);
-    this.shapes = findShapes(this.boundary, this.labels, this.width, this.height, this.numMines);
+    this.shapes = findShapes(this.map.boundary, this.map.labels, this.width, this.height, this.numMines);
 
     this.hints = makeGrid(this.width, this.height, null);
-    for (let i = 0; i < this.boundary.length; i++) {
-      const [x, y] = this.boundary[i];
+    for (let i = 0; i < this.map.boundary.length; i++) {
+      const [x, y] = this.map.boundary[i];
       let hasTrue = false, hasFalse = false;
       for (let [config, remaining] of this.shapes) {
         if (config[i]) {
@@ -140,7 +139,7 @@ class Game {
   }
 
   toggleFlag(x, y) {
-    if (!(this.state == State.PLAYING && this.labels[y][x] === null)) {
+    if (!(this.state == State.PLAYING && this.map.labels[y][x] === null)) {
       return;
     }
     this.flags[y][x] = !this.flags[y][x];
@@ -155,7 +154,7 @@ class Game {
 
     for (let y = 0; y < this.width; y++) {
       for (let x = 0; x < this.height; x++) {
-        const label = this.labels[y][x];
+        const label = this.map.labels[y][x];
         const mine = this.mines[y][x];
         const flag = this.flags[y][x];
         const hint = this.hints[y][x];
@@ -218,21 +217,37 @@ function* neighbors(x, y, width, height) {
   }
 }
 
-function getBoundary(labels, width, height) {
-  const boundary = [];
-  for (let y = 0; y < width; y++) {
-    for (let x = 0; x < height; x++) {
-      if (labels[y][x] === null) {
-        for (const [x0, y0] of neighbors(x, y, width, height)) {
-          if (labels[y0][x0] !== null) {
-            boundary.push([x, y]);
-            break;
+class Map {
+  constructor(width, height) {
+    this.width = width;
+    this.height = height;
+    this.boundary = [];
+    this.labels = makeGrid(width, height, null);
+    this.boundaryGrid = makeGrid(width, height, null);
+  }
+
+  reveal(x, y, n) {
+    this.labels[y][x] = n;
+    this.recalcBoundary();
+  }
+
+  recalcBoundary() {
+    this.boundary = [];
+    this.boundaryGrid = makeGrid(this.width, this.height, null);
+    for (let y = 0; y < this.width; y++) {
+      for (let x = 0; x < this.height; x++) {
+        if (this.labels[y][x] === null) {
+          for (const [x0, y0] of neighbors(x, y, this.width, this.height)) {
+            if (this.labels[y0][x0] !== null) {
+              this.boundaryGrid[y][x] = this.boundary.length;
+              this.boundary.push([x, y]);
+              break;
+            }
           }
         }
       }
     }
   }
-  return boundary;
 }
 
 function findShapes(boundary, labels, width, height, numMines) {
