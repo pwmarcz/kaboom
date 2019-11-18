@@ -72,8 +72,34 @@ class Game {
       return;
     }
 
-    const shape = choice(this.shapes);
-    const mineGrid = shape.mineGrid();
+    let hasSafeOptions = false;
+    for (let i = 0; i < this.map.boundary.length; i++) {
+      const dangerousShapes = this.shapes.filter(shape => shape.mines[i]);
+      if (dangerousShapes.length === 0) {
+        hasSafeOptions = true;
+        break;
+      }
+    }
+
+    let mineGrid;
+    if (this.map.boundaryGrid[y][x] === null) {
+      // Clicked somewhere outside of boundary.
+      // Select a random shape. TODO: something more clever here.
+      const shape = choice(this.shapes);
+      mineGrid = shape.mineGrid();
+    } else {
+      const idx = this.map.boundaryGrid[y][x];
+      const safeShapes = this.shapes.filter(shape => !shape.mines[idx]);
+      const dangerousShapes = this.shapes.filter(shape => shape.mines[idx]);
+
+      let shape;
+      if (safeShapes.length > 0 && (dangerousShapes.length === 0 || !hasSafeOptions)) {
+        shape = choice(safeShapes);
+      } else {
+        shape = choice(dangerousShapes);
+      }
+      mineGrid = shape.mineGrid();
+    }
 
     if (mineGrid[y][x]) {
       this.state = State.DEAD;
