@@ -8,7 +8,7 @@ const State = {
 const Hint = {
   MINE: 'MINE',
   UNKNOWN: 'UNKNOWN',
-  EMPTY: 'EMPTY',
+  SAFE: 'SAFE',
 }
 
 class Game {
@@ -148,7 +148,7 @@ class Game {
 
   refresh() {
     const HINTS = {
-      [Hint.EMPTY]: '.',
+      [Hint.SAFE]: '.',
       [Hint.UNKNOWN]: '?',
       [Hint.MINE]: '!',
     }
