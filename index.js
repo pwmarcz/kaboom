@@ -16,27 +16,14 @@ class Game {
     this.width = 10;
     this.height = 10;
     this.numMines = 20;
-    this.map = new Map(this.width, this.height);
-    this.mines = makeGrid(this.width, this.height, false);
+    this.map = new LabelMap(this.width, this.height);
+    //this.mines = makeGrid(this.width, this.height, false);
     this.flags = makeGrid(this.width, this.height, false);
     this.numRevealed = 0;
-    this.fillMines();
 
     this.state = State.PLAYING;
 
     this.recalc();
-  }
-
-  fillMines() {
-    let remaining = this.numMines;
-    while (remaining > 0) {
-      const x = Math.floor(Math.random() * this.width);
-      const y = Math.floor(Math.random() * this.height);
-      if (!this.mines[y][x]) {
-        this.mines[y][x] = true;
-        remaining--;
-      }
-    }
   }
 
   mount(boardElement, stateElement) {
@@ -85,35 +72,46 @@ class Game {
       return;
     }
 
-    if (this.mines[y][x]) {
+    const shape = choice(this.shapes);
+    const mineGrid = shape.mineGrid();
+
+    if (mineGrid[y][x]) {
       this.state = State.DEAD;
+      this.mineGrid = mineGrid;
       return;
     }
 
+    this.floodReveal(x, y, mineGrid);
+    this.map.recalc();
+  }
+
+  floodReveal(x, y, mineGrid) {
     let n = 0;
     for (const [x0, y0] of neighbors(x, y, this.width, this.height)) {
-      if (this.mines[y0][x0]) {
+      if (mineGrid[y0][x0]) {
         n++;
       }
     }
 
-    this.map.reveal(x, y, n);
+    this.map.labels[y][x] = n;
     this.numRevealed++;
     if (this.numRevealed + this.numMines === this.width * this.height) {
       this.state = State.WIN;
+      this.mineGrid = mineGrid;
       return;
     }
 
     if (n === 0) {
       for (const [x0, y0] of neighbors(x, y, this.width, this.height)) {
-        this.reveal(x0, y0);
+        if (this.map.labels[y0][x0] === null) {
+          this.floodReveal(x0, y0, mineGrid);
+        }
       }
     }
   }
 
   recalc() {
     this.shapes = findShapes(this.map, this.numMines);
-    console.log(this.shapes);
 
     this.hints = makeGrid(this.width, this.height, null);
     for (let i = 0; i < this.map.boundary.length; i++) {
@@ -156,7 +154,7 @@ class Game {
     for (let y = 0; y < this.width; y++) {
       for (let x = 0; x < this.height; x++) {
         const label = this.map.labels[y][x];
-        const mine = this.mines[y][x];
+        const mine = this.mineGrid && this.mineGrid[y][x];
         const flag = this.flags[y][x];
         const hint = this.hints[y][x];
 
@@ -218,7 +216,7 @@ function* neighbors(x, y, width, height) {
   }
 }
 
-class Map {
+class LabelMap {
   constructor(width, height) {
     this.width = width;
     this.height = height;
@@ -227,12 +225,7 @@ class Map {
     this.boundaryGrid = makeGrid(width, height, null);
   }
 
-  reveal(x, y, n) {
-    this.labels[y][x] = n;
-    this.recalcBoundary();
-  }
-
-  recalcBoundary() {
+  recalc() {
     this.boundary = [];
     this.boundaryGrid = makeGrid(this.width, this.height, null);
     for (let y = 0; y < this.width; y++) {
@@ -256,6 +249,36 @@ class Shape {
     this.map = map;
     this.mines = mines;
     this.remaining = remaining;
+  }
+
+  mineGrid() {
+    const mineGrid = makeGrid(this.map.width, this.map.height);
+
+    for (let i = 0; i < this.mines.length; i++) {
+      if (this.mines[i]) {
+        const [x, y] = this.map.boundary[i];
+        mineGrid[y][x] = true;
+      }
+    }
+    const remaining = this.remaining;
+
+    if (remaining > 0) {
+      const toSelect = [];
+      for (let y = 0; y < this.map.height; y++) {
+        for (let x = 0; x < this.map.width; x++) {
+          if (this.map.labels[y][x] === null && this.map.boundaryGrid[y][x] === null) {
+            toSelect.push([x, y]);
+          }
+        }
+      }
+      shuffle(toSelect);
+      for (let i = 0; i < remaining; i++) {
+        const [x, y] = toSelect[i];
+        mineGrid[y][x] = true;
+      }
+    }
+
+    return mineGrid;
   }
 }
 
@@ -328,6 +351,21 @@ function makeGrid(width, height, value) {
     grid.push(new Array(width).fill(value));
   }
   return grid;
+}
+
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const x = a[i];
+      a[i] = a[j];
+      a[j] = x;
+  }
+  return a;
+}
+
+function choice(a) {
+  const i = Math.floor(Math.random() * a.length);
+  return a[i];
 }
 
 const game = new Game();
