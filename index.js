@@ -3,13 +3,13 @@ const State = {
   PLAYING: 'PLAYING',
   WIN: 'WIN',
   DEAD: 'DEAD',
-}
+};
 
 const Hint = {
   MINE: 'MINE',
   UNKNOWN: 'UNKNOWN',
   SAFE: 'SAFE',
-}
+};
 
 class Game {
   constructor() {
@@ -53,7 +53,7 @@ class Game {
         cell.oncontextmenu = e => {
           e.preventDefault();
           this.rightClick(x, y);
-        }
+        };
         row.appendChild(cell);
         this.cells[y].push(cell);
       }
@@ -66,7 +66,7 @@ class Game {
   }
 
   cellClick(x, y) {
-    if (this.state == State.PLAYING) {
+    if (this.state === State.PLAYING) {
       this.reveal(x, y);
       this.recalc();
       this.refresh();
@@ -74,14 +74,14 @@ class Game {
   }
 
   rightClick(x, y) {
-    if (this.state == State.PLAYING) {
+    if (this.state === State.PLAYING) {
       this.toggleFlag(x, y);
       this.refresh();
     }
   }
 
   reveal(x, y) {
-    if (!(this.state == State.PLAYING && this.map.labels[y][x] === null && !this.flags[y][x])) {
+    if (!(this.state === State.PLAYING && this.map.labels[y][x] === null && !this.flags[y][x])) {
       return;
     }
 
@@ -104,7 +104,7 @@ class Game {
       return;
     }
 
-    if (n == 0) {
+    if (n === 0) {
       for (const [x0, y0] of neighbors(x, y, this.width, this.height)) {
         this.reveal(x0, y0);
       }
@@ -112,14 +112,15 @@ class Game {
   }
 
   recalc() {
-    this.shapes = findShapes(this.map.boundary, this.map.labels, this.width, this.height, this.numMines);
+    this.shapes = findShapes(this.map, this.numMines);
+    console.log(this.shapes);
 
     this.hints = makeGrid(this.width, this.height, null);
     for (let i = 0; i < this.map.boundary.length; i++) {
       const [x, y] = this.map.boundary[i];
       let hasTrue = false, hasFalse = false;
-      for (let [config, remaining] of this.shapes) {
-        if (config[i]) {
+      for (const shape of this.shapes) {
+        if (shape.mines[i]) {
           hasTrue = true;
         } else {
           hasFalse = true;
@@ -139,7 +140,7 @@ class Game {
   }
 
   toggleFlag(x, y) {
-    if (!(this.state == State.PLAYING && this.map.labels[y][x] === null)) {
+    if (!(this.state === State.PLAYING && this.map.labels[y][x] === null)) {
       return;
     }
     this.flags[y][x] = !this.flags[y][x];
@@ -150,7 +151,7 @@ class Game {
       [Hint.SAFE]: '.',
       [Hint.UNKNOWN]: '?',
       [Hint.MINE]: '!',
-    }
+    };
 
     for (let y = 0; y < this.width; y++) {
       for (let x = 0; x < this.height; x++) {
@@ -161,10 +162,10 @@ class Game {
 
         let className;
         let content;
-        if (this.state == State.DEAD && mine) {
+        if (this.state === State.DEAD && mine) {
           className = 'bomb';
-          content = '&#10006;'
-        } else if (this.state == State.WIN && mine) {
+          content = '&#10006;';
+        } else if (this.state === State.WIN && mine) {
           className = 'bomb';
           content = '&#11044';
         } else if (label !== null && label > 0) {
@@ -176,10 +177,10 @@ class Game {
         } else if (flag) {
           className = 'clickable unknown';
           content = '&#9873;';
-        } else if (this.state == State.PLAYING && hint !== null) {
+        } else if (this.state === State.PLAYING && hint !== null) {
           className = 'clickable unknown';
           content = HINTS[hint];
-        } else if (this.state == State.PLAYING) {
+        } else if (this.state === State.PLAYING) {
           className = 'clickable unknown';
           content = '&nbsp;';
         } else {
@@ -210,7 +211,7 @@ function* neighbors(x, y, width, height) {
     for (let x0 = x - 1; x0 <= x + 1; x0++) {
       if (0 <= x0 && x0 < width &&
         0 <= y0 && y0 < height &&
-        (y0 != y || x0 != x)) {
+        (y0 !== y || x0 !== x)) {
           yield [x0, y0];
         }
     }
@@ -250,23 +251,31 @@ class Map {
   }
 }
 
-function findShapes(boundary, labels, width, height, numMines) {
-  const mines = new Array(boundary.length).fill(false);
+class Shape {
+  constructor(map, mines, remaining) {
+    this.map = map;
+    this.mines = mines;
+    this.remaining = remaining;
+  }
+}
+
+function findShapes(map, numMines) {
+  const mines = new Array(map.boundary.length).fill(false);
   let remaining = numMines;
   const results = [];
 
-  const ones = makeGrid(width, height, 0);
-  const all = makeGrid(width, height, 0);
+  const ones = makeGrid(map.width, map.height, 0);
+  const all = makeGrid(map.width, map.height, 0);
 
-  for (const [x, y] of boundary) {
-    for (const [x0, y0] of neighbors(x, y, width, height)) {
+  for (const [x, y] of map.boundary) {
+    for (const [x0, y0] of neighbors(x, y, map.width, map.height)) {
       all[y0][x0]++;
     }
   }
 
   function backtrack(i) {
-    if (i == boundary.length) {
-      results.push([mines.slice(), remaining]);
+    if (i === map.boundary.length) {
+      results.push(new Shape(map, mines.slice(), remaining));
       return;
     }
 
@@ -281,17 +290,17 @@ function findShapes(boundary, labels, width, height, numMines) {
   function backtrackGo(i, hasMine) {
     mines[i] = hasMine;
 
-    const [x, y] = boundary[i];
+    const [x, y] = map.boundary[i];
     let failed = false;
-    for (const [x0, y0] of neighbors(x, y, width, height)) {
+    for (const [x0, y0] of neighbors(x, y, map.width, map.height)) {
       if (hasMine) {
         ones[y0][x0]++;
       }
       all[y0][x0]--;
 
-      if (labels[y0][x0] !== null) {
-        if (ones[y0][x0] > labels[y0][x0] ||
-          (all[y0][x0] === 0 && ones[y0][x0] !== labels[y0][x0])) {
+      if (map.labels[y0][x0] !== null) {
+        if (ones[y0][x0] > map.labels[y0][x0] ||
+          (all[y0][x0] === 0 && ones[y0][x0] !== map.labels[y0][x0])) {
             failed = true;
           }
       }
@@ -301,7 +310,7 @@ function findShapes(boundary, labels, width, height, numMines) {
       backtrack(i + 1);
     }
 
-    for (const [x0, y0] of neighbors(x, y, width, height)) {
+    for (const [x0, y0] of neighbors(x, y, map.width, map.height)) {
       if (hasMine) {
         ones[y0][x0]--;
       }
