@@ -5,23 +5,26 @@ const State = {
   DEAD: 'DEAD',
 }
 
+const Hint = {
+  MINE: 'MINE',
+  UNKNOWN: 'UNKNOWN',
+  EMPTY: 'EMPTY',
+}
+
 class Game {
   constructor() {
-    this.width = 5;
-    this.height = 5;
-    this.numMines = 5;
-    this.labels = [];
-    this.mines = [];
-    this.flags = [];
+    this.width = 10;
+    this.height = 10;
+    this.numMines = 20;
+    this.labels = makeGrid(this.width, this.height, null);
+    this.mines = makeGrid(this.width, this.height, false);
+    this.flags = makeGrid(this.width, this.height, false);
     this.numRevealed = 0;
-    for (let y = 0; y < this.height; y++) {
-      this.labels.push(new Array(this.width).fill(null));
-      this.mines.push(new Array(this.width).fill(false));
-      this.flags.push(new Array(this.width).fill(false));
-    }
     this.fillMines();
 
     this.state = State.PLAYING;
+
+    this.recalc();
   }
 
   fillMines() {
@@ -65,6 +68,7 @@ class Game {
   cellClick(x, y) {
     if (this.state == State.PLAYING) {
       this.reveal(x, y);
+      this.recalc();
       this.refresh();
     }
   }
@@ -107,6 +111,34 @@ class Game {
     }
   }
 
+  recalc() {
+    this.boundary = getBoundary(this.labels, this.width, this.height);
+    this.configurations = findConfigurations(this.boundary, this.labels, this.width, this.height, this.numMines);
+
+    this.hints = makeGrid(this.width, this.height, null);
+    for (let i = 0; i < this.boundary.length; i++) {
+      const [x, y] = this.boundary[i];
+      let hasTrue = false, hasFalse = false;
+      for (let [config, remaining] of this.configurations) {
+        if (config[i]) {
+          hasTrue = true;
+        } else {
+          hasFalse = true;
+        }
+      }
+
+      let hint = null;
+      if (hasTrue && hasFalse) {
+        hint = Hint.UNKNOWN;
+      } else if (hasTrue && !hasFalse) {
+        hint = Hint.MINE;
+      } else if (!hasTrue && hasFalse) {
+        hint = Hint.EMPTY;
+      }
+      this.hints[y][x] = hint;
+    }
+  }
+
   toggleFlag(x, y) {
     if (!(this.state == State.PLAYING && this.labels[y][x] === null)) {
       return;
@@ -115,10 +147,18 @@ class Game {
   }
 
   refresh() {
+    const HINTS = {
+      [Hint.EMPTY]: '.',
+      [Hint.UNKNOWN]: '?',
+      [Hint.MINE]: '!',
+    }
+
     for (let y = 0; y < this.width; y++) {
       for (let x = 0; x < this.height; x++) {
         const label = this.labels[y][x];
         const mine = this.mines[y][x];
+        const flag = this.flags[y][x];
+        const hint = this.hints[y][x];
 
         let className;
         let content;
@@ -134,9 +174,12 @@ class Game {
         } else if (label === 0) {
           className = 'label';
           content = '&nbsp;';
-        } else if (this.flags[y][x]) {
+        } else if (flag) {
           className = 'clickable unknown';
           content = '&#9873;';
+        } else if (this.state == State.PLAYING && hint !== null) {
+          className = 'clickable unknown';
+          content = HINTS[hint];
         } else if (this.state == State.PLAYING) {
           className = 'clickable unknown';
           content = '&nbsp;';
@@ -173,6 +216,94 @@ function* neighbors(x, y, width, height) {
         }
     }
   }
+}
+
+function getBoundary(labels, width, height) {
+  const boundary = [];
+  for (let y = 0; y < width; y++) {
+    for (let x = 0; x < height; x++) {
+      if (labels[y][x] === null) {
+        for (const [x0, y0] of neighbors(x, y, width, height)) {
+          if (labels[y0][x0] !== null) {
+            boundary.push([x, y]);
+            break;
+          }
+        }
+      }
+    }
+  }
+  return boundary;
+}
+
+function findConfigurations(boundary, labels, width, height, numMines) {
+  const mines = new Array(boundary.length).fill(false);
+  let remaining = numMines;
+  const results = [];
+
+  const ones = makeGrid(width, height, 0);
+  const all = makeGrid(width, height, 0);
+
+  for (const [x, y] of boundary) {
+    for (const [x0, y0] of neighbors(x, y, width, height)) {
+      all[y0][x0]++;
+    }
+  }
+
+  function backtrack(i) {
+    if (i == boundary.length) {
+      results.push([mines.slice(), remaining]);
+      return;
+    }
+
+    backtrackGo(i, false);
+    if (remaining > 0) {
+      remaining--;
+      backtrackGo(i, true);
+      remaining++;
+    }
+  }
+
+  function backtrackGo(i, hasMine) {
+    mines[i] = hasMine;
+
+    const [x, y] = boundary[i];
+    let failed = false;
+    for (const [x0, y0] of neighbors(x, y, width, height)) {
+      if (hasMine) {
+        ones[y0][x0]++;
+      }
+      all[y0][x0]--;
+
+      if (labels[y0][x0] !== null) {
+        if (ones[y0][x0] > labels[y0][x0] ||
+          (all[y0][x0] === 0 && ones[y0][x0] !== labels[y0][x0])) {
+            failed = true;
+          }
+      }
+    }
+
+    if (!failed) {
+      backtrack(i + 1);
+    }
+
+    for (const [x0, y0] of neighbors(x, y, width, height)) {
+      if (hasMine) {
+        ones[y0][x0]--;
+      }
+      all[y0][x0]++;
+    }
+  }
+
+  backtrack(0);
+  return results;
+}
+
+function makeGrid(width, height, value) {
+  const grid = [];
+  for (let y = 0; y < height; y++) {
+    grid.push(new Array(width).fill(value));
+  }
+  return grid;
 }
 
 const game = new Game();
