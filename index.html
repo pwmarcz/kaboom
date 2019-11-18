@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+
+<head>
+    <title>Minesweeper</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        .board {
+            font-size: 0px;
+        }
+
+        .cell {
+            font-size: 18px;
+            display: inline-block;
+            text-align: center;
+            width: 30px;
+            height: 30px;
+            border: 1px solid #888;
+            user-select: none;
+        }
+
+        .cell.label {
+            background: #aaa;
+            border-top-color: #aaa;
+            border-left-color: #aaa;
+        }
+
+        .cell.unknown,
+        .cell.bomb {
+            background: #ccc;
+            border-top-color: #eee;
+            border-left-color: #eee;
+            border-right-color: #999;
+            border-bottom-color: #999;
+        }
+
+        .cell.clickable {
+            cursor: pointer;
+        }
+
+        .cell.clickable:hover {
+            background: #ddd;
+        }
+
+        .buttons {
+            margin-top: 1em;
+        }
+
+        h2 {
+            margin-top: 1em;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Minesweeper</h1>
+        <div class="card">
+            <div class="card-body">
+                <div id="board" class="board"></div>
+            </div>
+        </div>
+        <p id="state"></p>
+    </div>
+    <script src="index.js"></script>
+</body>
