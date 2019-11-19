@@ -23,10 +23,12 @@ class Game {
 
     this.state = State.PLAYING;
 
+    this.debug = false;
+
     this.recalc();
   }
 
-  mount(boardElement, stateElement) {
+  mount(boardElement, stateElement, debugElement) {
     this.cells = [];
 
     for (let y = 0; y < this.height; y++) {
@@ -49,6 +51,16 @@ class Game {
 
     this.stateElement = stateElement;
 
+    debugElement.onclick = e => {
+      e.preventDefault();
+      this.toggleDebug();
+    };
+
+    this.refresh();
+  }
+
+  toggleDebug() {
+    this.debug = !this.debug;
     this.refresh();
   }
 
@@ -216,7 +228,7 @@ class Game {
         } else if (flag) {
           className = 'clickable unknown';
           content = '&#9873;';
-        } else if (this.state === State.PLAYING && hint !== null) {
+        } else if (this.debug && this.state === State.PLAYING && hint !== null) {
           className = 'clickable unknown';
           content = HINTS[hint];
         } else if (this.state === State.PLAYING) {
@@ -231,17 +243,24 @@ class Game {
       }
     }
 
+    let message;
     switch (this.state) {
       case State.PLAYING:
-        this.stateElement.innerText = '';
+        if (this.debug) {
+          message = `Possibilities: ${this.shapes.length}`;
+        } else {
+          message = '';
+        }
+
         break;
       case State.WIN:
-        this.stateElement.innerText = 'You win!';
+        message = 'You win!';
         break;
       case State.DEAD:
-        this.stateElement.innerText = 'You lose!';
+        message = 'You lose!';
         break;
     }
+    this.stateElement.innerText = message;
   }
 }
 
@@ -431,4 +450,4 @@ function choice(a) {
 }
 
 const game = new Game();
-game.mount(document.getElementById('board'), document.getElementById('state'));
+game.mount(document.getElementById('board'), document.getElementById('state'), document.getElementById('debug'));
