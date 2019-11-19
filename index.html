@@ -67,10 +67,15 @@
             <h1>Minesweeper</h1>
             <div class="card">
                 <div class="card-body">
-                    <div id="board" class="board"></div>
+                    <div id="game"></div>
                 </div>
             </div>
-            <p id="state"></p>
+            <div class="mt-1">
+                <button onclick="game.toggleDebug();" class="btn btn-light">Toggle debug mode</button>
+                <button onclick="newGame(8, 8, 10)" class="btn btn-secondary">New game (Beginner)</button>
+                <button onclick="newGame(10, 10, 20)" class="btn btn-secondary">New game (Intermediate)</button>
+                <button onclick="newGame(20, 20, 70)" class="btn btn-secondary">New game (Expert)</button>
+            </div>
             <h2>What is this?</h2>
             <p>This is a <i>cruel, but fair</i> Minesweeper game:</p>
             <ul>
@@ -79,7 +84,6 @@
                 <li>Except when you are <i>forced</i> to guess (there are no safe cells).</li>
             </ul>
             <p>Have fun!</p>
-            <p><a href="#" id="debug">Toggle debug mode</a></p>
             <h2>See also</h2>
             <p><a href="https://www.youtube.com/watch?v=LHY8NKj3RKs">Minesweeper - The Movie</a></p>
             <p><a href="https://www.chiark.greenend.org.uk/~sgtatham/puzzles/js/mines.html">Simon Tatham's Mines</a> - guaranteed solvable without guessing</p>

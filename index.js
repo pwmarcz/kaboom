@@ -12,10 +12,10 @@ const Hint = {
 };
 
 class Game {
-  constructor() {
-    this.width = 10;
-    this.height = 10;
-    this.numMines = 20;
+  constructor(width, height, numMines) {
+    this.width = width;
+    this.height = height;
+    this.numMines = numMines;
     this.map = new LabelMap(this.width, this.height);
     //this.mines = makeGrid(this.width, this.height, false);
     this.flags = makeGrid(this.width, this.height, false);
@@ -29,7 +29,11 @@ class Game {
     this.recalc();
   }
 
-  mount(boardElement, stateElement, debugElement) {
+  mount(gameElement) {
+    const boardElement = document.createElement('div');
+    boardElement.className = 'board';
+    gameElement.appendChild(boardElement);
+
     this.cells = [];
 
     for (let y = 0; y < this.height; y++) {
@@ -50,12 +54,8 @@ class Game {
       boardElement.appendChild(row);
     }
 
-    this.stateElement = stateElement;
-
-    debugElement.onclick = e => {
-      e.preventDefault();
-      this.toggleDebug();
-    };
+    this.stateElement = document.createElement('div');
+    gameElement.appendChild(this.stateElement);
 
     this.refresh();
   }
@@ -463,5 +463,13 @@ function choice(a) {
   return a[i];
 }
 
-const game = new Game();
-game.mount(document.getElementById('board'), document.getElementById('state'), document.getElementById('debug'));
+let game;
+
+function newGame(width, height, numMines) {
+  const gameElement = document.getElementById('game');
+  gameElement.innerHTML = '';
+  game = new Game(width, height, numMines);
+  game.mount(gameElement);
+}
+
+newGame(10, 10, 20);
