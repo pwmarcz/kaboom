@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 
+<html class="h-100">
 <head>
+    <meta charset="UTF-8">
+
     <title>Minesweeper</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
         integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
@@ -58,27 +61,39 @@
     </style>
 </head>
 
-<body>
-    <div class="container">
-        <h1>Minesweeper</h1>
-        <div class="card">
-            <div class="card-body">
-                <div id="board" class="board"></div>
+<body class="d-flex flex-column h-100">
+    <main class="flex-shrink-0">
+        <div class="container">
+            <h1>Minesweeper</h1>
+            <div class="card">
+                <div class="card-body">
+                    <div id="board" class="board"></div>
+                </div>
             </div>
+            <p id="state"></p>
+            <h2>What is this?</h2>
+            <p>This is a <i>cruel, but fair</i> Minesweeper game:</p>
+            <ul>
+                <li>The mines are not placed beforehand, but determined as you play.</li>
+                <li>If you try to guess, the game will always choose the worst scenario.</li>
+                <li>Except when you are <i>forced</i> to guess (there are no safe cells).</li>
+            </ul>
+            <p>Have fun!</p>
+            <p><a href="#" id="debug">Toggle debug mode</a></p>
+            <h2>See also</h2>
+            <p><a href="https://www.youtube.com/watch?v=LHY8NKj3RKs">Minesweeper - The Movie</a></p>
+            <p><a href="https://www.chiark.greenend.org.uk/~sgtatham/puzzles/js/mines.html">Simon Tatham's Mines</a> - guaranteed solvable without guessing</p>
+            <p><a href="https://github.com/pwmarcz/kaboom">This project on Github</a></p>
         </div>
-        <p id="state"></p>
-        <h2>What is this?</h2>
-        <p>This is a <i>cruel, but fair</i> Minesweeper game:</p>
-        <ul>
-            <li>The mines are not placed beforehand, but determined as you play.</li>
-            <li>If you try to guess, the game will always choose the worst scenario.</li>
-            <li>Except when you are <i>forced</i> to guess (there are no safe cells).</li>
-        </ul>
-        <p>Have fun!</p>
-        <p><a href="#" id="debug">Toggle debug mode</a></p>
-        <h2>See also</h2>
-        <p><a href="https://www.youtube.com/watch?v=LHY8NKj3RKs">Minesweeper - The Movie</a></p>
-        <p><a href="https://www.chiark.greenend.org.uk/~sgtatham/puzzles/js/mines.html">Simon Tatham's Mines</a> - guaranteed solvable without guessing</p>
+    </main>
+
+    <footer class="footer mt-auto py-3" style="background-color: #f5f5f5;">
+    <div class="container">
+        <small class="text-muted">
+            By Paweł Marczewski (<a href="https://pwmarcz.pl">pwmarcz.pl</a>)
+        </small>
     </div>
+    </footer>
+
     <script src="index.js"></script>
 </body>
