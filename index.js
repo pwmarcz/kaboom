@@ -20,6 +20,7 @@ class Game {
     //this.mines = makeGrid(this.width, this.height, false);
     this.flags = makeGrid(this.width, this.height, false);
     this.numRevealed = 0;
+    this.numFlags = 0;
 
     this.state = State.PLAYING;
 
@@ -194,7 +195,13 @@ class Game {
     if (!(this.state === State.PLAYING && this.map.labels[y][x] === null)) {
       return;
     }
-    this.flags[y][x] = !this.flags[y][x];
+    if (this.flags[y][x]) {
+      this.flags[y][x] = false;
+      this.numFlags--;
+    } else {
+      this.flags[y][x] = true;
+      this.numFlags++;
+    }
   }
 
   refresh() {
@@ -249,10 +256,9 @@ class Game {
     let message;
     switch (this.state) {
       case State.PLAYING:
+        message = `Mines: ${this.numFlags}/${this.numMines}`;
         if (this.debug) {
-          message = `Possibilities: ${this.shapes.length}`;
-        } else {
-          message = '';
+          message += `, possibilities: ${this.shapes.length}`;
         }
 
         break;
