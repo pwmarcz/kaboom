@@ -147,6 +147,11 @@ class Game {
       }
     }
 
+    if (this.flags[y][x]) {
+      this.flags[y][x] = false;
+      this.numFlags--;
+    }
+
     this.map.labels[y][x] = n;
     this.numRevealed++;
     if (this.numRevealed + this.numMines === this.width * this.height) {
