@@ -229,7 +229,10 @@ class Game {
           className = 'clickable unknown';
           content = '&#9873;';
         } else if (this.debug && this.state === State.PLAYING && hint !== null) {
-          className = 'clickable unknown';
+          className = 'clickable unknown hint';
+          content = HINTS[hint];
+        } else if (this.debug && hint !== null) {
+          className = 'unknown hint';
           content = HINTS[hint];
         } else if (this.state === State.PLAYING) {
           className = 'clickable unknown';
@@ -260,7 +263,7 @@ class Game {
         message = 'You lose!';
         break;
     }
-    this.stateElement.innerText = message;
+    this.stateElement.textContent = message;
   }
 }
 
