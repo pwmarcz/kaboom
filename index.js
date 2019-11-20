@@ -377,67 +377,108 @@ class Shape {
   }
 }
 
-function findShapes(map, numMines) {
-  const mines = new Array(map.boundary.length).fill(false);
-  let remaining = numMines;
-  const results = [];
+class Solver {
+  constructor(numMines, maxMines) {
+    this.numMines = numMines;
+    this.labels = [];
+    this.mineToLabel = new Array(numMines);
+    this.labelToMine = [];
+    this.maxMines = maxMines;
+    this.shapes = [];
 
-  const ones = makeGrid(map.width, map.height, 0);
-  const all = makeGrid(map.width, map.height, 0);
-
-  for (const [x, y] of map.boundary) {
-    for (const [x0, y0] of neighbors(x, y, map.width, map.height)) {
-      all[y0][x0]++;
+    for (let i = 0; i < numMines; i++) {
+      this.mineToLabel[i] = [];
     }
   }
 
-  function backtrack(i) {
-    if (i === map.boundary.length) {
-      results.push(new Shape(map, mines.slice(), remaining));
-      return;
-    }
+  addLabel(label, mineList) {
+    const labelIdx = this.labels.length;
 
-    backtrackGo(i, false);
-    if (remaining > 0) {
-      remaining--;
-      backtrackGo(i, true);
-      remaining++;
+    this.labels.push(label);
+    this.labelToMine.push(mineList);
+
+    for (const m of mineList) {
+      this.mineToLabel[m].push(labelIdx);
     }
   }
 
-  function backtrackGo(i, hasMine) {
-    mines[i] = hasMine;
+  run(map) {
+    const mines = new Array(this.numMines);
+    const ones = new Array(this.labels.length).fill(0);
+    const all = this.labelToMine.map(mineList => mineList.length);
+    let remaining = this.maxMines;
 
-    const [x, y] = map.boundary[i];
-    let failed = false;
-    for (const [x0, y0] of neighbors(x, y, map.width, map.height)) {
-      if (hasMine) {
-        ones[y0][x0]++;
+    const backtrack = i => {
+      if (i === mines.length) {
+        this.shapes.push(new Shape(map, mines.slice(), remaining));
+        return;
       }
-      all[y0][x0]--;
 
-      if (map.labels[y0][x0] !== null) {
-        if (ones[y0][x0] > map.labels[y0][x0] ||
-          (all[y0][x0] === 0 && ones[y0][x0] !== map.labels[y0][x0])) {
+      backtrackGo(i, false);
+      if (remaining > 0) {
+        remaining--;
+        backtrackGo(i, true);
+        remaining++;
+      }
+    };
+
+    const backtrackGo = (i, hasMine) => {
+      mines[i] = hasMine;
+
+      let failed = false;
+      for (const labelIdx of this.mineToLabel[i]) {
+        if (hasMine) {
+          ones[labelIdx]++;
+        }
+        all[labelIdx]--;
+
+        if (ones[labelIdx] > this.labels[labelIdx] ||
+          all[labelIdx] === 0 && ones[labelIdx] !== this.labels[labelIdx]) {
             failed = true;
           }
       }
-    }
 
-    if (!failed) {
-      backtrack(i + 1);
-    }
-
-    for (const [x0, y0] of neighbors(x, y, map.width, map.height)) {
-      if (hasMine) {
-        ones[y0][x0]--;
+      if (!failed) {
+        backtrack(i + 1);
       }
-      all[y0][x0]++;
+
+      for (const labelIdx of this.mineToLabel[i]) {
+        if (hasMine) {
+          ones[labelIdx]--;
+        }
+        all[labelIdx]++;
+      }
+    };
+
+    backtrack(0);
+  }
+}
+
+function findShapes(map, maxMines) {
+  const solver = new Solver(map.boundary.length, maxMines);
+
+  for (let x = 0; x < map.width; x++) {
+    for (let y = 0; y < map.height; y++) {
+      const label = map.labels[y][x];
+      if (label === null) {
+        continue;
+      }
+
+      const mineList = [];
+      for (const [x0, y0] of neighbors(x, y, map.width, map.height)) {
+        const mineIdx = map.boundaryGrid[y0][x0];
+        if (mineIdx !== null) {
+          mineList.push(mineIdx);
+        }
+      }
+      if (mineList.length > 0) {
+        solver.addLabel(label, mineList);
+      }
     }
   }
 
-  backtrack(0);
-  return results;
+  solver.run(map);
+  return solver.shapes;
 }
 
 function makeGrid(width, height, value) {
