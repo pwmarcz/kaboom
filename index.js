@@ -85,46 +85,32 @@ class Game {
       return;
     }
 
-    let hasSafeCells = false;
-    for (let i = 0; i < this.map.boundary.length; i++) {
-      const dangerousShapes = this.shapes.filter(shape => shape.mines[i]);
-      if (dangerousShapes.length === 0) {
-        hasSafeCells = true;
-        break;
-      }
-    }
+    const hasSafeCells = this.solver.hasSafeCells();
 
-    let outsideIsSafe = true;
-    for (const shape of this.shapes) {
-      if (shape.remaining > 0) {
-        outsideIsSafe = false;
-      }
-    }
+    const outsideIsSafe = this.solver.outsideIsSafe();
 
     let mineGrid;
     if (this.map.boundaryGrid[y][x] === null) {
       // Clicked somewhere outside of boundary.
 
       if (outsideIsSafe || !hasSafeCells) {
-        const shape = choice(this.shapes);
+        const shape = this.solver.anyShape();
         mineGrid = shape.mineGridWithEmpty(x, y);
       } else {
-        const dangerousShapes = this.shapes.filter(shape => shape.remaining > 0);
-        const shape = choice(dangerousShapes);
+        const shape = this.solver.anyShapeWithRemaining();
         mineGrid = shape.mineGridWithMine(x, y);
       }
     } else {
       // Clicked on boundary.
 
       const idx = this.map.boundaryGrid[y][x];
-      const safeShapes = this.shapes.filter(shape => !shape.mines[idx]);
-      const dangerousShapes = this.shapes.filter(shape => shape.mines[idx]);
 
       let shape;
-      if (safeShapes.length > 0 && (dangerousShapes.length === 0 || !hasSafeCells)) {
-        shape = choice(safeShapes);
+      if (this.solver.canBeSafe(idx) && (
+        !this.solver.canBeDangerous(idx) || !hasSafeCells)) {
+        shape = this.solver.anySafeShape(idx);
       } else {
-        shape = choice(dangerousShapes);
+        shape = this.solver.anyDangerousShape(idx);
       }
       mineGrid = shape.mineGrid();
     }
@@ -170,19 +156,14 @@ class Game {
   }
 
   recalc() {
-    this.shapes = findShapes(this.map, this.numMines);
+    this.solver = makeSolver(this.map, this.numMines);
+    this.shapes = this.solver.shapes;
 
     this.hints = makeGrid(this.width, this.height, null);
     for (let i = 0; i < this.map.boundary.length; i++) {
       const [x, y] = this.map.boundary[i];
-      let hasTrue = false, hasFalse = false;
-      for (const shape of this.shapes) {
-        if (shape.mines[i]) {
-          hasTrue = true;
-        } else {
-          hasFalse = true;
-        }
-      }
+      const hasTrue = this.solver.canBeDangerous(i);
+      const hasFalse = this.solver.canBeSafe(i);
 
       let hint = null;
       if (hasTrue && hasFalse) {
@@ -452,9 +433,57 @@ class Solver {
 
     backtrack(0);
   }
+
+  anyShape() {
+    return choice(this.shapes);
+  }
+
+  anyShapeWithRemaining() {
+    return choice(this.shapes.filter(shape => shape.remaining > 0));
+  }
+
+  anySafeShape(idx) {
+    return choice(this.shapes.filter(shape => !shape.mines[idx]));
+  }
+
+  anyDangerousShape(idx) {
+    return choice(this.shapes.filter(shape => shape.mines[idx]));
+  }
+
+  canBeSafe(idx) {
+    for (const shape of this.shapes) {
+      if (!shape.mines[idx]) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  canBeDangerous(idx) {
+    for (const shape of this.shapes) {
+      if (shape.mines[idx]) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  hasSafeCells() {
+    for (let i = 0; i < this.numMines; i++) {
+      const dangerousShapes = this.shapes.filter(shape => shape.mines[i]);
+      if (dangerousShapes.length === 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  outsideIsSafe() {
+    return this.shapes.filter(shape => shape.remaining > 0).length === 0;
+  }
 }
 
-function findShapes(map, maxMines) {
+function makeSolver(map, maxMines) {
   const solver = new Solver(map.boundary.length, maxMines);
 
   for (let x = 0; x < map.width; x++) {
@@ -478,7 +507,7 @@ function findShapes(map, maxMines) {
   }
 
   solver.run(map);
-  return solver.shapes;
+  return solver;
 }
 
 function makeGrid(width, height, value) {
