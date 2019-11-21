@@ -147,6 +147,8 @@ class Game {
 
     if (mineGrid[y][x]) {
       this.state = State.DEAD;
+      this.deathX = x;
+      this.deathY = y;
       this.mineGrid = mineGrid;
     } else {
       this.floodReveal(x, y, mineGrid);
@@ -238,7 +240,10 @@ class Game {
 
         let className;
         let content;
-        if (this.state === State.DEAD && mine) {
+        if (this.state === State.DEAD && mine && x === this.deathX && y === this.deathY) {
+          className = 'label';
+          content = '&#10006;';
+        } else if (this.state === State.DEAD && mine) {
           className = 'bomb';
           content = '&#10006;';
         } else if (this.state === State.WIN && mine) {
