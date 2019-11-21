@@ -246,7 +246,7 @@ class Game {
       case State.PLAYING:
         message = `Mines: ${this.numFlags}/${this.numMines}`;
         if (this.debug) {
-          message += `, possibilities: ${this.shapes.length}`;
+          message += `, solver clauses: ${this.solver.clauses.length}`;
         }
 
         break;
@@ -372,6 +372,11 @@ class Solver {
     for (let i = 0; i < numMines; i++) {
       this.mineToLabel[i] = [];
     }
+
+    this.range = new Array(this.numMines);
+    for (let i = 0; i < this.numMines; i++) {
+      this.range[i] = i;
+    }
   }
 
   addLabel(label, mineList) {
@@ -386,96 +391,56 @@ class Solver {
   }
 
   run(map) {
+    this.map = map;
+
     this.clauses = [];
     for (let i = 0; i < this.labels.length; i++) {
       const label = this.labels[i];
       const mineList = this.labelToMine[i];
 
-      const posSize = mineList.length - label + 1;
-      const negSize = label + 1;
-      for (const comb of combinations(mineList, posSize)) {
-        this.clauses.push(comb.map(n => n + 1));
-      }
-      for (const comb of combinations(mineList, negSize)) {
-        this.clauses.push(comb.map(n => -(n + 1)));
-      }
+      encodeAtLeast(this.clauses, mineList, label);
+      encodeAtMost(this.clauses, mineList, label);
     }
     if (this.numMines > 0) {
-      const range = new Array(this.numMines);
-      for (let i = 0; i < this.numMines; i++) {
-        range[i] = i;
-      }
-      const negSize = this.maxMines + 1;
-      for (const comb of combinations(range, negSize)) {
-        this.clauses.push(comb.map(n => -(n + 1)));
+      // TODO this is too slow
+      // encodeAtMost(this.clauses, this.range, this.maxMines);
+    }
+  }
+
+  solve(clauses) {
+    const mines = solveSat(this.labels.length, clauses);
+    if (!mines) {
+      return null;
+    }
+    let sum = 0;
+    for (const m of mines) {
+      if (m) {
+        sum++;
       }
     }
-    console.log(this.clauses.length);
-
-    const mines = new Array(this.numMines);
-    const ones = new Array(this.labels.length).fill(0);
-    const all = this.labelToMine.map(mineList => mineList.length);
-    let remaining = this.maxMines;
-
-    const backtrack = i => {
-      if (i === mines.length) {
-        this.shapes.push(new Shape(map, mines.slice(), remaining));
-        return;
-      }
-
-      backtrackGo(i, false);
-      if (remaining > 0) {
-        remaining--;
-        backtrackGo(i, true);
-        remaining++;
-      }
-    };
-
-    const backtrackGo = (i, hasMine) => {
-      mines[i] = hasMine;
-
-      let failed = false;
-      for (const labelIdx of this.mineToLabel[i]) {
-        if (hasMine) {
-          ones[labelIdx]++;
-        }
-        all[labelIdx]--;
-
-        if (ones[labelIdx] > this.labels[labelIdx] ||
-          all[labelIdx] === 0 && ones[labelIdx] !== this.labels[labelIdx]) {
-            failed = true;
-          }
-      }
-
-      if (!failed) {
-        backtrack(i + 1);
-      }
-
-      for (const labelIdx of this.mineToLabel[i]) {
-        if (hasMine) {
-          ones[labelIdx]--;
-        }
-        all[labelIdx]++;
-      }
-    };
-
-    backtrack(0);
+    return new Shape(this.map, mines.slice(1), this.maxMines - sum);
   }
 
   anyShape() {
-    return choice(this.shapes);
+    return this.solve(this.clauses);
   }
 
   anyShapeWithRemaining() {
-    return choice(this.shapes.filter(shape => shape.remaining > 0));
+    const clauses = this.clauses.slice();
+    encodeAtMost(clauses, this.range, this.maxMines-1);
+    return this.solve(this.clauses);
   }
 
   anySafeShape(idx) {
-    return choice(this.shapes.filter(shape => !shape.mines[idx]));
+    const clauses = this.clauses.slice();
+    clauses.push([-(idx + 1)]);
+    return this.solve(this.clauses);
   }
 
   anyDangerousShape(idx) {
-    return choice(this.shapes.filter(shape => shape.mines[idx]));
+    const clauses = this.clauses.slice();
+    clauses.push([idx + 1]);
+    return this.solve(this.clauses);
   }
 
   canBeSafe(idx) {
@@ -492,8 +457,7 @@ class Solver {
 
   hasSafeCells() {
     for (let i = 0; i < this.numMines; i++) {
-      const dangerousShapes = this.shapes.filter(shape => shape.mines[i]);
-      if (dangerousShapes.length === 0) {
+      if (this.canBeSafe(i)) {
         return true;
       }
     }
@@ -550,11 +514,6 @@ function shuffle(a) {
   return a;
 }
 
-function choice(a) {
-  const i = Math.floor(Math.random() * a.length);
-  return a[i];
-}
-
 function combinations(list, n) {
   const result = [];
   const current = [];
@@ -608,6 +567,20 @@ function solveSat(numVars, clauses) {
     }
   }
   return result;
+}
+
+function encodeAtLeast(clauses, vars, k) {
+  const size = vars.length - k + 1;
+  for (const comb of combinations(vars, size)) {
+    clauses.push(comb.map(n => n + 1));
+  }
+}
+
+function encodeAtMost(clauses, vars, k) {
+  const size = k + 1;
+  for (const comb of combinations(vars, size)) {
+    clauses.push(comb.map(n => -(n + 1)));
+  }
 }
 
 let game;
