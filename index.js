@@ -386,6 +386,32 @@ class Solver {
   }
 
   run(map) {
+    this.clauses = [];
+    for (let i = 0; i < this.labels.length; i++) {
+      const label = this.labels[i];
+      const mineList = this.labelToMine[i];
+
+      const posSize = mineList.length - label + 1;
+      const negSize = label + 1;
+      for (const comb of combinations(mineList, posSize)) {
+        this.clauses.push(comb.map(n => n + 1));
+      }
+      for (const comb of combinations(mineList, negSize)) {
+        this.clauses.push(comb.map(n => -(n + 1)));
+      }
+    }
+    if (this.numMines > 0) {
+      const range = new Array(this.numMines);
+      for (let i = 0; i < this.numMines; i++) {
+        range[i] = i;
+      }
+      const negSize = this.maxMines + 1;
+      for (const comb of combinations(range, negSize)) {
+        this.clauses.push(comb.map(n => -(n + 1)));
+      }
+    }
+    console.log(this.clauses.length);
+
     const mines = new Array(this.numMines);
     const ones = new Array(this.labels.length).fill(0);
     const all = this.labelToMine.map(mineList => mineList.length);
@@ -453,21 +479,15 @@ class Solver {
   }
 
   canBeSafe(idx) {
-    for (const shape of this.shapes) {
-      if (!shape.mines[idx]) {
-        return true;
-      }
-    }
-    return false;
+    const clauses = this.clauses.slice();
+    clauses.push([-(idx + 1)]);
+    return !!solveSat(this.labels.length, clauses);
   }
 
   canBeDangerous(idx) {
-    for (const shape of this.shapes) {
-      if (shape.mines[idx]) {
-        return true;
-      }
-    }
-    return false;
+    const clauses = this.clauses.slice();
+    clauses.push([idx + 1]);
+    return !!solveSat(this.labels.length, clauses);
   }
 
   hasSafeCells() {
@@ -533,6 +553,29 @@ function shuffle(a) {
 function choice(a) {
   const i = Math.floor(Math.random() * a.length);
   return a[i];
+}
+
+function combinations(list, n) {
+  const result = [];
+  const current = [];
+
+  function go(i, n) {
+    if (i === list.length) {
+      if (n === 0) {
+        result.push(current.slice());
+      }
+    } else {
+      if (n > 0) {
+        current.push(list[i]);
+        go(i+1, n-1);
+        current.pop();
+      }
+      go(i+1, n);
+    }
+  }
+
+  go(0, n);
+  return result;
 }
 
 /*
