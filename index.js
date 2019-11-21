@@ -1,3 +1,5 @@
+/* global Module */
+const solveString = Module.cwrap('solve_string', 'string', ['string', 'int']);
 
 const State = {
   PLAYING: 'PLAYING',
@@ -531,6 +533,38 @@ function shuffle(a) {
 function choice(a) {
   const i = Math.floor(Math.random() * a.length);
   return a[i];
+}
+
+/*
+  Example, for "a1 & (a2 | ~a3)" formula:
+
+  > solveSat(3, [[1], [2, -3]])
+  [ null, true, false, false ]
+
+  Variables are numbered starting from 1, result is too.
+*/
+function solveSat(numVars, clauses) {
+  const lines = [`p cnf ${numVars} ${clauses.length}`];
+  for (const clause of clauses) {
+    lines.push(clause.join(' ') + ' 0');
+  }
+
+  const input = lines.join('\n');
+  const output = solveString(input, input.length);
+  if (output.slice(0, 3) !== 'SAT') {
+    return null;
+  }
+
+  const result = new Array(numVars+1).fill(null);
+  for (const s of output.slice(4).split(' ')) {
+    const n = parseInt(s, 10);
+    if (n > 0) {
+      result[n] = true;
+    } else {
+      result[-n] = false;
+    }
+  }
+  return result;
 }
 
 let game;
