@@ -44,11 +44,10 @@ class Game {
       for (let x = 0; x < this.width; x++) {
         const cell = document.createElement('div');
         cell.className = 'cell clickable unknown';
-        cell.onclick = () => this.cellClick(x, y);
-        cell.oncontextmenu = e => {
-          e.preventDefault();
-          this.rightClick(x, y);
-        };
+        cell.onclick = e => this.cellClick(e, x, y);
+        cell.onmousedown = e => this.cellMouseDown(e, x, y);
+        cell.ondblclick = e => this.cellAltClick(e, x, y);
+        cell.oncontextmenu = e => this.cellRightClick(e, x, y);
         row.appendChild(cell);
         this.cells[y].push(cell);
       }
@@ -66,18 +65,47 @@ class Game {
     this.refresh();
   }
 
-  cellClick(x, y) {
+  cellClick(e, x, y) {
+    e.preventDefault();
+    this.reveal(x, y);
+  }
+
+  cellMouseDown(e, x, y) {
+    if (e.button === 1) {
+      e.preventDefault();
+      this.revealAround(x, y);
+    }
+  }
+
+  cellAltClick(e, x, y) {
+    e.preventDefault();
+    this.revealAround(x, y);
+  }
+
+  cellRightClick(e, x, y) {
+    e.preventDefault();
     if (this.state === State.PLAYING) {
-      this.reveal(x, y);
-      this.recalc();
+      this.toggleFlag(x, y);
       this.refresh();
     }
   }
 
-  rightClick(x, y) {
-    if (this.state === State.PLAYING) {
-      this.toggleFlag(x, y);
-      this.refresh();
+  revealAround(x, y) {
+    if (!(this.state === State.PLAYING && this.map.labels[y][x] !== null)) {
+      return;
+    }
+    let flags = 0;
+    for (const [x0, y0] of neighbors(x, y, this.width, this.height)) {
+      if (this.flags[y0][x0]) {
+        flags++;
+      }
+    }
+    if (this.map.labels[y][x] > flags) {
+      return;
+    }
+
+    for (const [x0, y0] of neighbors(x, y, this.width, this.height)) {
+      this.reveal(x0, y0);
     }
   }
 
@@ -119,11 +147,12 @@ class Game {
     if (mineGrid[y][x]) {
       this.state = State.DEAD;
       this.mineGrid = mineGrid;
-      return;
+    } else {
+      this.floodReveal(x, y, mineGrid);
     }
 
-    this.floodReveal(x, y, mineGrid);
-    this.map.recalc();
+    this.recalc();
+    this.refresh();
   }
 
   floodReveal(x, y, mineGrid) {
@@ -157,6 +186,7 @@ class Game {
   }
 
   recalc() {
+    this.map.recalc();
     this.solver = makeSolver(this.map, this.numMines);
     this.shapes = this.solver.shapes;
 
