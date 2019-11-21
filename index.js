@@ -276,14 +276,14 @@ class LabelMap {
   constructor(width, height) {
     this.width = width;
     this.height = height;
-    this.boundary = [];
     this.labels = makeGrid(width, height, null);
-    this.boundaryGrid = makeGrid(width, height, null);
+    this.recalc();
   }
 
   recalc() {
     this.boundary = [];
     this.boundaryGrid = makeGrid(this.width, this.height, null);
+    this.numOutside = 0;
     for (let y = 0; y < this.width; y++) {
       for (let x = 0; x < this.height; x++) {
         if (this.labels[y][x] === null) {
@@ -293,6 +293,10 @@ class LabelMap {
               this.boundary.push([x, y]);
               break;
             }
+          }
+
+          if (this.boundaryGrid[y][x] === null) {
+            this.numOutside++;
           }
         }
       }
@@ -360,12 +364,14 @@ class Shape {
 }
 
 class Solver {
-  constructor(numMines, maxMines) {
+  constructor(numMines, minMines, maxMines) {
     this.numMines = numMines;
+    this.minMines = minMines;
+    this.maxMines = maxMines;
+
     this.labels = [];
     this.mineToLabel = new Array(numMines);
     this.labelToMine = [];
-    this.maxMines = maxMines;
     this.shapes = [];
 
     for (let i = 0; i < numMines; i++) {
@@ -405,6 +411,7 @@ class Solver {
       this.sat.assertAtMost(vars, label);
     }
     this.sat.addCounter(this.range);
+    this.sat.assertCounterAtLeast(this.minMines);
     this.sat.assertCounterAtMost(this.maxMines);
 
     for (let i = 0; i < this.numMines; i++) {
@@ -490,12 +497,13 @@ class Solver {
   }
 
   debugMessage() {
-    return `clauses: ${this.sat.clauses.length}`;
+    return `boundary: ${this.numMines}, clauses: ${this.sat.clauses.length}, minMines: ${this.minMines}, maxMines: ${this.maxMines}`;
   }
 }
 
 function makeSolver(map, maxMines) {
-  const solver = new Solver(map.boundary.length, maxMines);
+  const minMines = Math.max(0, maxMines - map.numOutside);
+  const solver = new Solver(map.boundary.length, minMines, maxMines);
 
   for (let x = 0; x < map.width; x++) {
     for (let y = 0; y < map.height; y++) {
