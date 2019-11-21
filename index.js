@@ -277,6 +277,7 @@ class LabelMap {
     this.width = width;
     this.height = height;
     this.labels = makeGrid(width, height, null);
+    this.cache = makeGrid(width, height, null);
     this.recalc();
   }
 
@@ -301,6 +302,16 @@ class LabelMap {
         }
       }
     }
+  }
+
+  setCache(i, val) {
+    const [x, y] = this.boundary[i];
+    this.cache[y][x] = val;
+  }
+
+  getCache(i) {
+    const [x, y] = this.boundary[i];
+    return this.cache[y][x];
   }
 }
 
@@ -364,45 +375,51 @@ class Shape {
 }
 
 class Solver {
-  constructor(numMines, minMines, maxMines) {
+  constructor(map, numMines, minMines, maxMines) {
+    this.map = map;
+
     this.numMines = numMines;
     this.minMines = minMines;
     this.maxMines = maxMines;
 
     this.labels = [];
-    this.mineToLabel = new Array(numMines);
     this.labelToMine = [];
     this.shapes = [];
-
-    for (let i = 0; i < numMines; i++) {
-      this.mineToLabel[i] = [];
-    }
-
-    this.range = new Array(this.numMines);
-    for (let i = 0; i < this.numMines; i++) {
-      this.range[i] = i+1;
-    }
+    this.cache = new Array(numMines).fill(null);
 
     this.sat = new Sat(this.numMines);
 
     this._canBeSafe = new Array(numMines).fill(null);
     this._canBeDangerous = new Array(numMines).fill(null);
-  }
 
-  addLabel(label, mineList) {
-    const labelIdx = this.labels.length;
-
-    this.labels.push(label);
-    this.labelToMine.push(mineList);
-
-    for (const m of mineList) {
-      this.mineToLabel[m].push(labelIdx);
+    this.uncachedMines = [];
+    this.numCachedTrue = 0;
+    for (let i = 0; i < this.numMines; i++) {
+      const c = map.getCache(i);
+      this.cache[i] = c;
+      if (c === null) {
+        this.uncachedMines.push(i);
+      } else if (c) {
+        this.numCachedTrue++;
+      }
     }
   }
 
-  run(map) {
-    this.map = map;
+  addLabel(label, mineList) {
+    const uncachedMineList = [];
+    for (const m of mineList) {
+      if (this.cache[m] === null) {
+        uncachedMineList.push(m);
+      } else if (this.cache[m]) {
+        label--;
+      }
+    }
 
+    this.labels.push(label);
+    this.labelToMine.push(uncachedMineList);
+  }
+
+  run() {
     for (let i = 0; i < this.labels.length; i++) {
       const label = this.labels[i];
       const vars = this.labelToMine[i].map(n => n+1);
@@ -410,9 +427,17 @@ class Solver {
       this.sat.assertAtLeast(vars, label);
       this.sat.assertAtMost(vars, label);
     }
-    this.sat.addCounter(this.range);
-    this.sat.assertCounterAtLeast(this.minMines);
-    this.sat.assertCounterAtMost(this.maxMines);
+    for (let i = 0; i < this.numMines; i++) {
+      if (this.cache[i] === true) {
+        this.sat.assert([i+1]);
+      } else if (this.cache[i] === false) {
+        this.sat.assert([-(i+1)]);
+      }
+    }
+
+    this.sat.addCounter(this.uncachedMines.map(m => m+1));
+    this.sat.assertCounterAtLeast(Math.max(0, this.minMines - this.numCachedTrue));
+    this.sat.assertCounterAtMost(Math.max(0, this.maxMines - this.numCachedTrue));
 
     for (let i = 0; i < this.numMines; i++) {
       if (this._canBeSafe[i] === null) {
@@ -431,6 +456,12 @@ class Solver {
         } else {
           this._canBeDangerous[i] = false;
         }
+      }
+
+      if (this._canBeDangerous[i] && !this._canBeSafe[i]) {
+        this.map.setCache(i, true);
+      } else if (this._canBeSafe[i] && !this._canBeDangerous[i]) {
+        this.map.setCache(i, false);
       }
     }
   }
@@ -497,13 +528,14 @@ class Solver {
   }
 
   debugMessage() {
-    return `boundary: ${this.numMines}, clauses: ${this.sat.clauses.length}, minMines: ${this.minMines}, maxMines: ${this.maxMines}`;
+    return `boundary: ${this.numMines}, uncached: ${this.uncachedMines.length}, ` +
+      `clauses: ${this.sat.clauses.length}, minMines: ${this.minMines}, maxMines: ${this.maxMines}`;
   }
 }
 
 function makeSolver(map, maxMines) {
   const minMines = Math.max(0, maxMines - map.numOutside);
-  const solver = new Solver(map.boundary.length, minMines, maxMines);
+  const solver = new Solver(map, map.boundary.length, minMines, maxMines);
 
   for (let x = 0; x < map.width; x++) {
     for (let y = 0; y < map.height; y++) {
@@ -525,7 +557,7 @@ function makeSolver(map, maxMines) {
     }
   }
 
-  solver.run(map);
+  solver.run();
   return solver;
 }
 
