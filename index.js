@@ -115,6 +115,7 @@ class Game {
     }
 
     const hasSafeCells = this.solver.hasSafeCells();
+    const hasNonDeadlyCells = this.solver.hasNonDeadlyCells();
 
     const outsideIsSafe = this.solver.outsideIsSafe();
 
@@ -122,7 +123,7 @@ class Game {
     if (this.map.boundaryGrid[y][x] === null) {
       // Clicked somewhere outside of boundary.
 
-      if (this.map.boundary.length === 0 || outsideIsSafe) {
+      if (this.map.boundary.length === 0 || outsideIsSafe || !hasNonDeadlyCells) {
         const shape = this.solver.anyShape();
         mineGrid = shape.mineGridWithEmpty(x, y);
       } else {
@@ -557,6 +558,15 @@ class Solver {
   hasSafeCells() {
     for (let i = 0; i < this.numMines; i++) {
       if (!this.canBeDangerous(i)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  hasNonDeadlyCells() {
+    for (let i = 0; i < this.numMines; i++) {
+      if (this.canBeSafe(i)) {
         return true;
       }
     }
