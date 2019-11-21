@@ -378,6 +378,9 @@ class Solver {
     }
 
     this.sat = new Sat(this.numMines);
+
+    this._canBeSafe = new Array(numMines).fill(null);
+    this._canBeDangerous = new Array(numMines).fill(null);
   }
 
   addLabel(label, mineList) {
@@ -404,6 +407,36 @@ class Solver {
     if (this.numMines > 0) {
       // TODO this is too slow
       // encodeAtMost(this.clauses, this.range, this.maxMines);
+    }
+
+    for (let i = 0; i < this.numMines; i++) {
+      if (this._canBeSafe[i] === null) {
+        const solution = this.sat.solveWith(() => this.sat.assert([-(i+1)]));
+        if (solution !== null) {
+          this.update(solution);
+        } else {
+          this._canBeSafe[i] = false;
+        }
+      }
+
+      if (this._canBeDangerous[i] === null) {
+        const solution = this.sat.solveWith(() => this.sat.assert([i+1]));
+        if (solution !== null) {
+          this.update(solution);
+        } else {
+          this._canBeDangerous[i] = false;
+        }
+      }
+    }
+  }
+
+  update(solution) {
+    for (let i = 0; i < this.numMines; i++) {
+      if (solution[i+1]) {
+        this._canBeDangerous[i] = true;
+      } else {
+        this._canBeSafe[i] = true;
+      }
     }
   }
 
@@ -438,11 +471,11 @@ class Solver {
   }
 
   canBeSafe(idx) {
-    return !!this.sat.solveWith(() => this.sat.assert([-(idx+1)]));
+    return this._canBeSafe[idx];
   }
 
   canBeDangerous(idx) {
-    return !!this.sat.solveWith(() => this.sat.assert([idx+1]));
+    return this._canBeDangerous[idx];
   }
 
   hasSafeCells() {
