@@ -404,10 +404,8 @@ class Solver {
       this.sat.assertAtLeast(vars, label);
       this.sat.assertAtMost(vars, label);
     }
-    if (this.numMines > 0) {
-      // TODO this is too slow
-      // encodeAtMost(this.clauses, this.range, this.maxMines);
-    }
+    this.sat.addCounter(this.range);
+    this.sat.assertCounterAtMost(this.maxMines);
 
     for (let i = 0; i < this.numMines; i++) {
       if (this._canBeSafe[i] === null) {
@@ -444,7 +442,7 @@ class Solver {
     if (!solution) {
       return null;
     }
-    const mines = solution.slice(1);
+    const mines = solution.slice(1, this.numMines+1);
     let sum = 0;
     for (const m of mines) {
       if (m) {
@@ -459,7 +457,7 @@ class Solver {
   }
 
   anyShapeWithRemaining() {
-    return this.shape(this.sat.solveWith(() => this.sat.assertAtMost(this.range, this.maxMines-1)));
+    return this.shape(this.sat.solveWith(() => this.sat.assertCounterAtMost(this.maxMines-1)));
   }
 
   anySafeShape(idx) {
@@ -544,10 +542,14 @@ function shuffle(a) {
 let game;
 
 function newGame(width, height, numMines) {
+  const debug = game && game.debug;
   const gameElement = document.getElementById('game');
   gameElement.innerHTML = '';
   game = new Game(width, height, numMines);
   game.mount(gameElement);
+  if (debug) {
+    game.toggleDebug();
+  }
 }
 
 newGame(10, 10, 20);

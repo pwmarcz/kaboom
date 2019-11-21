@@ -25,6 +25,66 @@ class Sat {
     }
   }
 
+  addCounter(vars) {
+    this.counter = this._addCounter(vars);
+  }
+
+  assertCounterAtLeast(k) {
+    for (let i = 0; i < k && i < this.counter.length; i++) {
+      this.assert([this.counter[i]]);
+    }
+  }
+
+  assertCounterAtMost(k) {
+    for (let i = k; i < this.counter.length; i++) {
+      this.assert([-this.counter[i]]);
+    }
+  }
+
+  /*
+    See:
+    https://cs.stackexchange.com/questions/6521/reduce-the-following-problem-to-sat/6522#6522
+    http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.458.7676&rep=rep1&type=pdf
+    Efficient CNF encoding of Boolean cardinality constraints - Olivier Bailleux and Yacine Boufkhad
+   */
+
+  _addCounter(vars) {
+    if (vars.length <= 1) {
+      return vars;
+    }
+
+    const mid = Math.floor(vars.length/2);
+    const left = this._addCounter(vars.slice(0, mid));
+    const right = this._addCounter(vars.slice(mid));
+
+    const counter = [];
+    for (let i = 0; i < vars.length; i++) {
+      counter.push(++this.numVars);
+    }
+
+    for (let a = 0; a <= left.length; a++) {
+      for (let b = 0; b <= right.length; b++) {
+        if (a > 0 && b > 0) {
+          this.assert([-left[a-1], -right[b-1], counter[a+b-1]]);
+        } else if (a > 0) {
+          this.assert([-left[a-1], counter[a-1]]);
+        } else if (b > 0) {
+          this.assert([-right[b-1], counter[b-1]]);
+        }
+
+        if (a < left.length && b < right.length) {
+          this.assert([left[a], right[b], -counter[a+b]]);
+        } else if (a < left.length) {
+          this.assert([left[a], -counter[a+b]]);
+        } else if (b < right.length) {
+          this.assert([right[b], -counter[a+b]]);
+        }
+      }
+    }
+
+    return counter;
+  }
+
   solveWith(func) {
     const saved = this.clauses;
     try {
