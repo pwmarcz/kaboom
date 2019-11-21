@@ -1,5 +1,4 @@
-/* global Module */
-const solveString = Module.cwrap('solve_string', 'string', ['string', 'int']);
+/* global Sat */
 
 const State = {
   PLAYING: 'PLAYING',
@@ -246,7 +245,7 @@ class Game {
       case State.PLAYING:
         message = `Mines: ${this.numFlags}/${this.numMines}`;
         if (this.debug) {
-          message += `, solver clauses: ${this.solver.clauses.length}`;
+          message += ', ' + this.solver.debugMessage();
         }
 
         break;
@@ -375,8 +374,10 @@ class Solver {
 
     this.range = new Array(this.numMines);
     for (let i = 0; i < this.numMines; i++) {
-      this.range[i] = i;
+      this.range[i] = i+1;
     }
+
+    this.sat = new Sat(this.numMines);
   }
 
   addLabel(label, mineList) {
@@ -393,13 +394,12 @@ class Solver {
   run(map) {
     this.map = map;
 
-    this.clauses = [];
     for (let i = 0; i < this.labels.length; i++) {
       const label = this.labels[i];
-      const mineList = this.labelToMine[i];
+      const vars = this.labelToMine[i].map(n => n+1);
 
-      encodeAtLeast(this.clauses, mineList, label);
-      encodeAtMost(this.clauses, mineList, label);
+      this.sat.assertAtLeast(vars, label);
+      this.sat.assertAtMost(vars, label);
     }
     if (this.numMines > 0) {
       // TODO this is too slow
@@ -407,52 +407,42 @@ class Solver {
     }
   }
 
-  solve(clauses) {
-    const mines = solveSat(this.labels.length, clauses);
-    if (!mines) {
+  shape(solution) {
+    if (!solution) {
       return null;
     }
+    const mines = solution.slice(1);
     let sum = 0;
     for (const m of mines) {
       if (m) {
         sum++;
       }
     }
-    return new Shape(this.map, mines.slice(1), this.maxMines - sum);
+    return new Shape(this.map, mines, this.maxMines - sum);
   }
 
   anyShape() {
-    return this.solve(this.clauses);
+    return this.shape(this.sat.solve());
   }
 
   anyShapeWithRemaining() {
-    const clauses = this.clauses.slice();
-    encodeAtMost(clauses, this.range, this.maxMines-1);
-    return this.solve(this.clauses);
+    return this.shape(this.sat.solveWith(() => this.sat.assertAtMost(this.range, this.maxMines-1)));
   }
 
   anySafeShape(idx) {
-    const clauses = this.clauses.slice();
-    clauses.push([-(idx + 1)]);
-    return this.solve(this.clauses);
+    return this.shape(this.sat.solveWith(() => this.sat.assert([-(idx+1)])));
   }
 
   anyDangerousShape(idx) {
-    const clauses = this.clauses.slice();
-    clauses.push([idx + 1]);
-    return this.solve(this.clauses);
+    return this.shape(this.sat.solveWith(() => this.sat.assert([idx+1])));
   }
 
   canBeSafe(idx) {
-    const clauses = this.clauses.slice();
-    clauses.push([-(idx + 1)]);
-    return !!solveSat(this.labels.length, clauses);
+    return !!this.sat.solveWith(() => this.sat.assert([-(idx+1)]));
   }
 
   canBeDangerous(idx) {
-    const clauses = this.clauses.slice();
-    clauses.push([idx + 1]);
-    return !!solveSat(this.labels.length, clauses);
+    return !!this.sat.solveWith(() => this.sat.assert([idx+1]));
   }
 
   hasSafeCells() {
@@ -466,6 +456,10 @@ class Solver {
 
   outsideIsSafe() {
     return this.shapes.filter(shape => shape.remaining > 0).length === 0;
+  }
+
+  debugMessage() {
+    return `clauses: ${this.sat.clauses.length}`;
   }
 }
 
@@ -512,75 +506,6 @@ function shuffle(a) {
       a[j] = x;
   }
   return a;
-}
-
-function combinations(list, n) {
-  const result = [];
-  const current = [];
-
-  function go(i, n) {
-    if (i === list.length) {
-      if (n === 0) {
-        result.push(current.slice());
-      }
-    } else {
-      if (n > 0) {
-        current.push(list[i]);
-        go(i+1, n-1);
-        current.pop();
-      }
-      go(i+1, n);
-    }
-  }
-
-  go(0, n);
-  return result;
-}
-
-/*
-  Example, for "a1 & (a2 | ~a3)" formula:
-
-  > solveSat(3, [[1], [2, -3]])
-  [ null, true, false, false ]
-
-  Variables are numbered starting from 1, result is too.
-*/
-function solveSat(numVars, clauses) {
-  const lines = [`p cnf ${numVars} ${clauses.length}`];
-  for (const clause of clauses) {
-    lines.push(clause.join(' ') + ' 0');
-  }
-
-  const input = lines.join('\n');
-  const output = solveString(input, input.length);
-  if (output.slice(0, 3) !== 'SAT') {
-    return null;
-  }
-
-  const result = new Array(numVars+1).fill(null);
-  for (const s of output.slice(4).split(' ')) {
-    const n = parseInt(s, 10);
-    if (n > 0) {
-      result[n] = true;
-    } else {
-      result[-n] = false;
-    }
-  }
-  return result;
-}
-
-function encodeAtLeast(clauses, vars, k) {
-  const size = vars.length - k + 1;
-  for (const comb of combinations(vars, size)) {
-    clauses.push(comb.map(n => n + 1));
-  }
-}
-
-function encodeAtMost(clauses, vars, k) {
-  const size = k + 1;
-  for (const comb of combinations(vars, size)) {
-    clauses.push(comb.map(n => -(n + 1)));
-  }
 }
 
 let game;
