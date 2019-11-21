@@ -447,7 +447,7 @@ class Solver {
 
   hasSafeCells() {
     for (let i = 0; i < this.numMines; i++) {
-      if (this.canBeSafe(i)) {
+      if (!this.canBeDangerous(i)) {
         return true;
       }
     }
