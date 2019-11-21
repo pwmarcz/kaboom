@@ -470,6 +470,17 @@ class Solver {
     this.sat.assertCounterAtMost(Math.max(0, this.maxMines - this.numCachedTrue));
 
     for (let i = 0; i < this.numMines; i++) {
+      if (this.cache[i] !== null) {
+        if (this.cache[i]) {
+          this._canBeSafe[i] = false;
+          this._canBeDangerous[i] = true;
+        } else {
+          this._canBeSafe[i] = true;
+          this._canBeDangerous[i] = false;
+        }
+        continue;
+      }
+
       if (this._canBeSafe[i] === null) {
         const solution = this.sat.solveWith(() => this.sat.assert([-(i+1)]));
         if (solution !== null) {
