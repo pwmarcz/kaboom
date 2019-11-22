@@ -60,8 +60,8 @@ class Game {
     this.refresh();
   }
 
-  toggleDebug() {
-    this.debug = !this.debug;
+  setDebug(val) {
+    this.debug = val;
     this.refresh();
   }
 
@@ -636,15 +636,28 @@ function shuffle(a) {
 
 let game;
 
-function newGame(width, height, numMines) {
-  const debug = game && game.debug;
+function newGame() {
+  const width = parseInt(document.getElementById('width').value, 10);
+  const height = parseInt(document.getElementById('height').value, 10);
+  const numMines = parseInt(document.getElementById('numMines').value, 10);
+  const debug = document.getElementById('debug').checked;
+
   const gameElement = document.getElementById('game');
   gameElement.innerHTML = '';
   game = new Game(width, height, numMines);
   game.mount(gameElement);
-  if (debug) {
-    game.toggleDebug();
-  }
+  game.setDebug(debug);
 }
 
-newGame(10, 10, 20);
+function setParams(width, height, numMines) {
+  document.getElementById('width').value = width;
+  document.getElementById('height').value = height;
+  document.getElementById('numMines').value = numMines;
+}
+
+function setDebug(e) {
+  game.setDebug(e.target.checked);
+}
+
+setParams(10, 10, 20);
+newGame();

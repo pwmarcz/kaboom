@@ -72,11 +72,45 @@
                     <div id="game"></div>
                 </div>
             </div>
-            <div class="mt-1">
-                <button onclick="game.toggleDebug();" class="btn btn-light">Toggle debug mode</button>
-                <button onclick="newGame(8, 8, 10)" class="btn btn-secondary">New game (Beginner)</button>
-                <button onclick="newGame(10, 10, 20)" class="btn btn-secondary">New game (Intermediate)</button>
-                <button onclick="newGame(20, 20, 70)" class="btn btn-secondary">New game (Expert)</button>
+            <div class="mt-2">
+                <div class="form-check form-check-inline">
+                    <label class="form-check-label">
+                        <input id="debug" type="checkbox" onChange="setDebug(event)">
+                        Debug mode
+                    </label>
+                </div>
+                <!-- TODO -->
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-2">
+                    <div>
+                        <button class="btn btn-primary w-100" id="new-game" onClick="newGame()">New game</button>
+                    </div>
+                    <div class="input-group mt-2">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">width</div>
+                        </div>
+                        <input id="width" type="number" class="form-control" min="2" max="30">
+                    </div>
+                    <div class="input-group mt-2">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">height</div>
+                        </div>
+                        <input id="height" type="number" class="form-control" min="2" max="30">
+                    </div>
+                    <div class="input-group mt-2">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">mines</div>
+                        </div>
+                        <input id="numMines" type="number" class="form-control" min="1" max="1000">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <button onClick="setParams(8, 8, 8)" class="btn btn-light w-100" id="new-game">I'm too young to die</button>
+                    <button onClick="setParams(10, 10, 20)" class="btn btn-light w-100 mt-2" id="new-game">Hey, not too rough</button>
+                    <button onClick="setParams(20, 20, 50)" class="btn btn-light w-100 mt-2" id="new-game">Hurt me plenty</button>
+                    <button onClick="setParams(20, 20, 90)" class="btn btn-light w-100 mt-2" id="new-game">Ultra-Violence</button>
+                </div>
             </div>
             <h2>What is this?</h2>
             <p>This is a <i>cruel, but fair</i> Minesweeper game:</p>
