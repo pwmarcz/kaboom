@@ -79,6 +79,12 @@
                         Debug mode
                     </label>
                 </div>
+                <div class="form-check form-check-inline">
+                    <label class="form-check-label">
+                        <input id="allowOutside" type="checkbox" onChange="setAllowOutside(event)">
+                        Allow guessing anywhere
+                    </label>
+                </div>
                 <!-- TODO -->
             </div>
             <div class="row mt-2">
@@ -90,19 +96,19 @@
                         <div class="input-group-prepend">
                             <div class="input-group-text">width</div>
                         </div>
-                        <input id="width" type="number" class="form-control" min="2" max="30">
+                        <input id="width" type="number" class="form-control" min="2" max="30" value="10">
                     </div>
                     <div class="input-group mt-2">
                         <div class="input-group-prepend">
                             <div class="input-group-text">height</div>
                         </div>
-                        <input id="height" type="number" class="form-control" min="2" max="30">
+                        <input id="height" type="number" class="form-control" min="2" max="30" value="10">
                     </div>
                     <div class="input-group mt-2">
                         <div class="input-group-prepend">
                             <div class="input-group-text">mines</div>
                         </div>
-                        <input id="numMines" type="number" class="form-control" min="1" max="1000">
+                        <input id="numMines" type="number" class="form-control" min="1" max="1000" value="20">
                     </div>
                 </div>
                 <div class="col-md-3">

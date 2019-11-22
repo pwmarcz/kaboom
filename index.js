@@ -26,6 +26,7 @@ class Game {
     this.state = State.PLAYING;
 
     this.debug = false;
+    this.allowOutside = false;
 
     this.recalc();
   }
@@ -60,9 +61,13 @@ class Game {
     this.refresh();
   }
 
-  setDebug(val) {
-    this.debug = val;
+  setDebug(debug) {
+    this.debug = debug;
     this.refresh();
+  }
+
+  setAllowOutside(allowOutside) {
+    this.allowOutside = allowOutside;
   }
 
   cellClick(e, x, y) {
@@ -117,13 +122,18 @@ class Game {
     const hasSafeCells = this.solver.hasSafeCells();
     const hasNonDeadlyCells = this.solver.hasNonDeadlyCells();
 
-    const outsideIsSafe = this.solver.outsideIsSafe();
-
     let mineGrid;
     if (this.map.boundaryGrid[y][x] === null) {
       // Clicked somewhere outside of boundary.
 
-      if (this.map.boundary.length === 0 || outsideIsSafe || !hasNonDeadlyCells) {
+      let outsideIsSafe;
+      if (this.allowOutside) {
+        outsideIsSafe = this.map.boundary.length === 0 || (!hasSafeCells && this.solver.outsideCanBeSafe());
+      } else {
+        outsideIsSafe = this.map.boundary.length === 0 || this.solver.outsideIsSafe() || !hasNonDeadlyCells;
+      }
+
+      if (outsideIsSafe) {
         const shape = this.solver.anyShape();
         mineGrid = shape.mineGridWithEmpty(x, y);
       } else {
@@ -541,7 +551,7 @@ class Solver {
   }
 
   anyShapeWithRemaining() {
-    return this.shape(this.sat.solveWith(() => this.sat.assertCounterAtMost(this.maxMines-1)));
+    return this.shape(this.sat.solveWith(() => this.sat.assertCounterAtMost(this.maxMines - this.numCachedTrue - 1)));
   }
 
   anySafeShape(idx) {
@@ -578,8 +588,18 @@ class Solver {
     return false;
   }
 
+  // Check if there is no possibility that outside will contain a mine
   outsideIsSafe() {
-    return !this.anyShapeWithRemaining();
+    return this.numMines >= this.maxMines &&
+            !this.sat.solveWith(() => this.sat.assertCounterAtMost(this.maxMines - this.numCachedTrue - 1));
+  }
+
+  // Check if there is a possibility that outside will NOT contain a mine
+  outsideCanBeSafe() {
+    // we need to have at least minMines+1, if we have minMines that means
+    // all the outside squares contain mines.
+    return this.minMines < 0 ||
+      !!this.sat.solveWith(() => this.sat.assertCounterAtLeast(this.minMines - this.numCachedTrue + 1));
   }
 
   debugMessage() {
@@ -589,7 +609,7 @@ class Solver {
 }
 
 function makeSolver(map, maxMines) {
-  const minMines = Math.max(0, maxMines - map.numOutside);
+  const minMines = maxMines - map.numOutside;
   const solver = new Solver(map, map.boundary.length, minMines, maxMines);
 
   for (let x = 0; x < map.width; x++) {
@@ -641,12 +661,19 @@ function newGame() {
   const height = parseInt(document.getElementById('height').value, 10);
   const numMines = parseInt(document.getElementById('numMines').value, 10);
   const debug = document.getElementById('debug').checked;
+  const allowOutside = document.getElementById('allowOutside').checked;
+
+  if (numMines >= width * height) {
+    alert('Too many mines!');
+    return;
+  }
 
   const gameElement = document.getElementById('game');
   gameElement.innerHTML = '';
   game = new Game(width, height, numMines);
   game.mount(gameElement);
   game.setDebug(debug);
+  game.setAllowOutside(allowOutside);
 }
 
 function setParams(width, height, numMines) {
@@ -659,5 +686,8 @@ function setDebug(e) {
   game.setDebug(e.target.checked);
 }
 
-setParams(10, 10, 20);
+function setAllowOutside(e) {
+  game.setAllowOutside(e.target.checked);
+}
+
 newGame();
