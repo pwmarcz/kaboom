@@ -260,7 +260,7 @@ class Game {
           className = 'bomb';
           content = '&#11044';
         } else if (label !== null && label > 0) {
-          className = 'label';
+          className = `label label-${label}`;
           content = `${label}`;
         } else if (label === 0) {
           className = 'label';
