@@ -241,8 +241,8 @@ class Game {
       [Hint.MINE]: '!',
     };
 
-    for (let y = 0; y < this.width; y++) {
-      for (let x = 0; x < this.height; x++) {
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
         const label = this.map.labels[y][x];
         const mine = this.mineGrid && this.mineGrid[y][x];
         const flag = this.flags[y][x];
@@ -331,8 +331,8 @@ class LabelMap {
     this.boundary = [];
     this.boundaryGrid = makeGrid(this.width, this.height, null);
     this.numOutside = 0;
-    for (let y = 0; y < this.width; y++) {
-      for (let x = 0; x < this.height; x++) {
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
         if (this.labels[y][x] === null) {
           for (const [x0, y0] of neighbors(x, y, this.width, this.height)) {
             if (this.labels[y0][x0] !== null) {
