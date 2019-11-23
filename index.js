@@ -672,6 +672,10 @@ function newGame() {
     alert('Dimensions must be at least 1!');
     return;
   }
+  
+  if (width * height > 10000) {
+    alert("Dimensions too large. Game may crash.");
+  }
 
   if (numMines < 1) {
     alert('Must have at least 1 mine!');
