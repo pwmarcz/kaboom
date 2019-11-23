@@ -663,6 +663,11 @@ function newGame() {
   const debug = document.getElementById('debug').checked;
   const allowOutside = document.getElementById('allowOutside').checked;
 
+  if (isNaN(width) || isNaN(height) || isNaN(numMines)) {
+    alert('You need to enter a number!');
+    return;
+  }
+
   if (width < 1 || height < 1) {
     alert('Dimensions must be at least 1!');
     return;
