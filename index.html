@@ -138,27 +138,29 @@
             </div>
             <div class="row mt-2">
                 <div class="col-md-2">
-                    <div>
-                        <button class="btn btn-primary w-100" id="new-game" onClick="newGame()">New game</button>
-                    </div>
-                    <div class="input-group mt-2">
-                        <div class="input-group-prepend">
-                            <div class="input-group-text">width</div>
+                    <form id="form" onsubmit="newGame(event)">
+                        <div>
+                            <button class="btn btn-primary w-100" id="new-game"">New game</button>
                         </div>
-                        <input id="width" type="number" class="form-control" min="1" max="30" value="10">
-                    </div>
-                    <div class="input-group mt-2">
-                        <div class="input-group-prepend">
-                            <div class="input-group-text">height</div>
+                        <div class="input-group mt-2">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text">width</div>
+                            </div>
+                            <input onchange="updateMax()" id="width" type="number" class="form-control" min="1" max="30" value="10">
                         </div>
-                        <input id="height" type="number" class="form-control" min="1" max="30" value="10">
-                    </div>
-                    <div class="input-group mt-2">
-                        <div class="input-group-prepend">
-                            <div class="input-group-text">mines</div>
+                        <div class="input-group mt-2">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text">height</div>
+                            </div>
+                            <input onchange="updateMax()" id="height" type="number" class="form-control" min="1" max="30" value="10">
                         </div>
-                        <input id="numMines" type="number" class="form-control" min="1" max="1000" value="20">
-                    </div>
+                        <div class="input-group mt-2">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text">mines</div>
+                            </div>
+                            <input id="numMines" type="number" class="form-control" min="1" max="899" value="20">
+                        </div>
+                    </form>
                 </div>
                 <div class="col-md-3">
                     <button onClick="setParams(8, 8, 8)" class="btn btn-light w-100" id="new-game">I'm too young to die</button>

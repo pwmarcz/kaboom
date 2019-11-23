@@ -645,32 +645,16 @@ function shuffle(a) {
 
 let game;
 
-function newGame() {
+function newGame(event) {
+  if (event) {
+    event.preventDefault();
+  }
+
   const width = parseInt(document.getElementById('width').value, 10);
   const height = parseInt(document.getElementById('height').value, 10);
   const numMines = parseInt(document.getElementById('numMines').value, 10);
   const debug = document.getElementById('debug').checked;
   const allowOutside = document.getElementById('allowOutside').checked;
-
-  if (isNaN(width) || isNaN(height) || isNaN(numMines)) {
-    alert('You need to enter a number!');
-    return;
-  }
-
-  if (width < 1 || height < 1) {
-    alert('Dimensions must be at least 1!');
-    return;
-  }
-
-  if (numMines < 1) {
-    alert('Must have at least 1 mine!');
-    return;
-  }
-
-  if (numMines >= width * height) {
-    alert('Too many mines!');
-    return;
-  }
 
   const gameElement = document.getElementById('game');
   gameElement.innerHTML = '';
@@ -680,10 +664,19 @@ function newGame() {
   game.setAllowOutside(allowOutside);
 }
 
+function updateMax() {
+  const width = parseInt(document.getElementById('width').value, 10);
+  const height = parseInt(document.getElementById('height').value, 10);
+  if (!isNaN(width) && !isNaN(height)) {
+    document.getElementById('numMines').max = width * height - 1;
+  }
+}
+
 function setParams(width, height, numMines) {
   document.getElementById('width').value = width;
   document.getElementById('height').value = height;
   document.getElementById('numMines').value = numMines;
+  updateMax();
 }
 
 function setDebug(e) {
@@ -694,4 +687,8 @@ function setAllowOutside(e) {
   game.setAllowOutside(e.target.checked);
 }
 
-newGame();
+updateMax();
+const form = document.getElementById('form');
+if (form.reportValidity === undefined || form.reportValidity()) {
+  newGame();
+}
