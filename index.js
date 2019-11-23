@@ -249,40 +249,29 @@ class Game {
         const hint = this.hints[y][x];
 
         let className;
-        let content;
         if (this.state === State.DEAD && mine && x === this.deathX && y === this.deathY) {
-          className = 'label';
-          content = '&#10006;';
+          className = 'known bomb';
         } else if (this.state === State.DEAD && mine) {
-          className = 'bomb';
-          content = '&#10006;';
+          className = 'unknown bomb';
         } else if (this.state === State.WIN && mine) {
-          className = 'bomb';
-          content = '&#11044';
+          className = 'unknown bomb-win';
         } else if (label !== null && label > 0) {
-          className = `label label-${label}`;
-          content = `${label}`;
+          className = `known label-${label}`;
         } else if (label === 0) {
-          className = 'label';
-          content = '&nbsp;';
+          className = 'known';
         } else if (flag) {
-          className = 'clickable unknown';
-          content = '&#9873;';
-        } else if (this.debug && this.state === State.PLAYING && hint !== null) {
-          className = 'clickable unknown hint';
-          content = HINTS[hint];
-        } else if (this.debug && hint !== null) {
-          className = 'unknown hint';
-          content = HINTS[hint];
+          className = 'unknown clickable flag';
         } else if (this.state === State.PLAYING) {
-          className = 'clickable unknown';
-          content = '&nbsp;';
+          className = 'unknown clickable';
         } else {
           className = 'unknown';
-          content = '&nbsp;';
         }
+
+        if (hint !== null && (this.state === State.DEAD || this.debug)) {
+          className += ` hint hint-${hint.toLowerCase()}`;
+        }
+
         this.cells[y][x].className = 'cell ' + className;
-        this.cells[y][x].innerHTML = content;
       }
     }
 
