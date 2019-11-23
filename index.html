@@ -53,24 +53,34 @@
         }
 
         .cell.hint::before {
-            position: absolute;
             content: "";
-            top: 2px;
-            left: 2px;
-            bottom: 2px;
-            right: 2px;
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            bottom: 3px;
+            right: 3px;
             border: 2px solid;
+            line-height: 16px;
         }
 
-        .cell.hint-safe::before { border-color: #9c9; }
-        .cell.hint-unknown::before { border-color: #da0; }
-        .cell.hint-mine::before { border-color: #e99; }
+        .cell.hint-safe::before { color: #9c9; border-color: #9c9; }
+        .cell.hint-unknown::before { color: #da0; border-color: #da0; }
+        .cell.hint-mine::before { color: #e77; border-color: #e77; }
 
-        .cell.hint-safe::after { content: "."}  /* bullet */
-        .cell.hint-unknown::after { content: "?"}  /* bullet */
-        .cell.hint-mine::after { content: "!"}  /* multiplication X */
+        .cell.hint-safe::before { content: "."}  /* bullet */
+        .cell.hint-unknown::before { content: "?"}  /* bullet */
+        .cell.hint-mine::before { content: "!"}  /* multiplication X */
 
-        .cell::after { content: "\a0"; }  /* nbsp */
+        .cell.bomb::before, .cell.bomb-win::before, .cell.flag::before { content: ""; }
+
+        .cell::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+        }
         .cell.label-1::after { content: "1"; }
         .cell.label-2::after { content: "2"; }
         .cell.label-3::after { content: "3"; }
