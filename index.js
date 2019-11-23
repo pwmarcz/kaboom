@@ -663,13 +663,13 @@ function newGame() {
   const debug = document.getElementById('debug').checked;
   const allowOutside = document.getElementById('allowOutside').checked;
 
-  if (width < 0) {
-    alert('Width must be at least 1!');
+  if (width < 1 || height < 1) {
+    alert('Dimensions must be at least 1!');
     return;
   }
-  
-  if (height < 0) {
-    alert('Height must be at least 1!');
+
+  if (numMines < 1) {
+    alert('Must have at least 1 mine!');
     return;
   }
 
@@ -677,12 +677,7 @@ function newGame() {
     alert('Too many mines!');
     return;
   }
-  
-  if (numMines < 0) {
-    alert('Must have at least 1 mine!');
-    return;
-  }
-  
+
   const gameElement = document.getElementById('game');
   gameElement.innerHTML = '';
   game = new Game(width, height, numMines);
