@@ -688,7 +688,4 @@ function setAllowOutside(e) {
 }
 
 updateMax();
-const form = document.getElementById('form');
-if (form.reportValidity === undefined || form.reportValidity()) {
-  newGame();
-}
+document.getElementById('new-game').click();  // this will trigger validation
