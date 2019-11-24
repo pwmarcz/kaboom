@@ -266,12 +266,6 @@ class Game {
   }
 
   refresh() {
-    const HINTS = {
-      [Hint.SAFE]: '.',
-      [Hint.UNKNOWN]: '?',
-      [Hint.MINE]: '!',
-    };
-
     for (let y = 0; y < this.height; y++) {
       for (let x = 0; x < this.width; x++) {
         const label = this.map.labels[y][x];
