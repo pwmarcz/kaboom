@@ -39,6 +39,8 @@ class Game {
 
     this.cells = [];
 
+    const isTouch = (('ontouchstart' in window) || (navigator.MaxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0));
+
     for (let y = 0; y < this.height; y++) {
       this.cells.push([]);
       const row = document.createElement('div');
@@ -50,8 +52,10 @@ class Game {
         cell.onmousedown = e => this.cellMouseDown(e, x, y);
         cell.ondblclick = e => this.cellDblClick(e, x, y);
         cell.oncontextmenu = e => e.preventDefault();
-        cell.setAttribute('data-long-press-delay', 500);
-        cell.addEventListener('long-press', e => this.cellLongPress(e, x, y));
+        if (isTouch) {
+          cell.setAttribute('data-long-press-delay', 500);
+          cell.addEventListener('long-press', e => this.cellLongPress(e, x, y));
+        }
         row.appendChild(cell);
         this.cells[y].push(cell);
       }
