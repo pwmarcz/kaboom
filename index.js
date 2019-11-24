@@ -48,9 +48,10 @@ class Game {
         cell.className = 'cell clickable unknown';
         cell.onclick = e => this.cellClick(e, x, y);
         cell.onmousedown = e => this.cellMouseDown(e, x, y);
-        cell.onmouseleave = e => this.cellMouseLeave(e, x, y);
         cell.ondblclick = e => this.cellDblClick(e, x, y);
         cell.oncontextmenu = e => e.preventDefault();
+        cell.setAttribute('data-long-press-delay', 500);
+        cell.addEventListener('long-press', e => this.cellLongPress(e, x, y));
         row.appendChild(cell);
         this.cells[y].push(cell);
       }
@@ -78,14 +79,9 @@ class Game {
 
   cellClick(e, x, y) {
     e.preventDefault();
-    this.clearTimeout();
     if (!this.mobileMode) {
       this.reveal(x, y);
     }
-  }
-
-  cellMouseLeave(e, x, y) {
-    this.clearTimeout();
   }
 
   clearTimeout() {
@@ -97,9 +93,6 @@ class Game {
 
   cellMouseDown(e, x, y) {
     switch(e.button) {
-      case 0:
-        this.timeoutId = setTimeout(() => this.cellLongPress(x, y), 500);
-        break;
       case 1:
         e.preventDefault();
         this.revealAround(x, y);
@@ -120,8 +113,7 @@ class Game {
     }
   }
 
-  cellLongPress(x, y) {
-    this.timeoutId = null;
+  cellLongPress(e, x, y) {
     this.toggleFlag(x, y);
   }
 
