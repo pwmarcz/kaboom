@@ -35,6 +35,7 @@ class Game {
   mount(gameElement) {
     const boardElement = document.createElement('div');
     boardElement.className = 'board';
+    boardElement.id = 'board';
     gameElement.appendChild(boardElement);
 
     this.cells = [];
@@ -685,6 +686,21 @@ function newGame(event) {
   game.setDebug(debug);
   game.setAllowOutside(allowOutside);
   game.setSafeMode(safeMode);
+
+  updateSize();
+}
+
+function updateSize() {
+  const board = document.getElementById('board');
+  if (board.scrollWidth > board.offsetWidth) {
+    const factor = board.offsetWidth / board.scrollWidth;
+    board.style.transform = `scale(${factor})`;
+    board.style.transformOrigin = 'top left';
+    board.style.height = (board.scrollHeight * factor) + 'px';
+  } else {
+    board.style.transform = '';
+    board.style.height = 'auto';
+  }
 }
 
 function updateMax() {
@@ -713,6 +729,8 @@ function setAllowOutside(e) {
 function setSafeMode(e) {
   game.setSafeMode(e.target.checked);
 }
+
+window.addEventListener('resize', updateSize);
 
 updateMax();
 document.getElementById('new-game').click();  // this will trigger validation
