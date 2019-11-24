@@ -27,7 +27,7 @@ class Game {
 
     this.debug = false;
     this.allowOutside = false;
-    this.mobileMode = false;
+    this.safeMode = false;
 
     this.recalc();
   }
@@ -77,13 +77,13 @@ class Game {
     this.allowOutside = allowOutside;
   }
 
-  setMobileMode(mobileMode) {
-    this.mobileMode = mobileMode;
+  setSafeMode(safeMode) {
+    this.safeMode = safeMode;
   }
 
   cellClick(e, x, y) {
     e.preventDefault();
-    if (!this.mobileMode) {
+    if (!this.safeMode) {
       this.reveal(x, y);
     }
   }
@@ -110,7 +110,7 @@ class Game {
 
   cellDblClick(e, x, y) {
     e.preventDefault();
-    if (this.mobileMode && this.map.labels[y][x] === null) {
+    if (this.safeMode && this.map.labels[y][x] === null) {
       this.reveal(x, y);
     } else {
       this.revealAround(x, y);
@@ -676,7 +676,7 @@ function newGame(event) {
   const numMines = parseInt(document.getElementById('numMines').value, 10);
   const debug = document.getElementById('debug').checked;
   const allowOutside = document.getElementById('allowOutside').checked;
-  const mobileMode = document.getElementById('mobileMode').checked;
+  const safeMode = document.getElementById('safeMode').checked;
 
   const gameElement = document.getElementById('game');
   gameElement.innerHTML = '';
@@ -684,7 +684,7 @@ function newGame(event) {
   game.mount(gameElement);
   game.setDebug(debug);
   game.setAllowOutside(allowOutside);
-  game.setMobileMode(mobileMode);
+  game.setSafeMode(safeMode);
 }
 
 function updateMax() {
@@ -710,8 +710,8 @@ function setAllowOutside(e) {
   game.setAllowOutside(e.target.checked);
 }
 
-function setMobileMode(e) {
-  game.setMobileMode(e.target.checked);
+function setSafeMode(e) {
+  game.setSafeMode(e.target.checked);
 }
 
 updateMax();
