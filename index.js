@@ -27,6 +27,7 @@ class Game {
 
     this.debug = false;
     this.allowOutside = false;
+    this.mobileMode = false;
 
     this.recalc();
   }
@@ -47,8 +48,9 @@ class Game {
         cell.className = 'cell clickable unknown';
         cell.onclick = e => this.cellClick(e, x, y);
         cell.onmousedown = e => this.cellMouseDown(e, x, y);
-        cell.ondblclick = e => this.cellAltClick(e, x, y);
-        cell.oncontextmenu = e => this.cellRightClick(e, x, y);
+        cell.onmouseleave = e => this.cellMouseLeave(e, x, y);
+        cell.ondblclick = e => this.cellDblClick(e, x, y);
+        cell.oncontextmenu = e => e.preventDefault();
         row.appendChild(cell);
         this.cells[y].push(cell);
       }
@@ -70,29 +72,57 @@ class Game {
     this.allowOutside = allowOutside;
   }
 
+  setMobileMode(mobileMode) {
+    this.mobileMode = mobileMode;
+  }
+
   cellClick(e, x, y) {
     e.preventDefault();
-    this.reveal(x, y);
+    this.clearTimeout();
+    if (!this.mobileMode) {
+      this.reveal(x, y);
+    }
+  }
+
+  cellMouseLeave(e, x, y) {
+    this.clearTimeout();
+  }
+
+  clearTimeout() {
+    if (this.timeoutId) {
+      clearTimeout(this.timeoutId);
+      this.timeoutId = null;
+    }
   }
 
   cellMouseDown(e, x, y) {
-    if (e.button === 1) {
-      e.preventDefault();
+    switch(e.button) {
+      case 0:
+        this.timeoutId = setTimeout(() => this.cellLongPress(x, y), 500);
+        break;
+      case 1:
+        e.preventDefault();
+        this.revealAround(x, y);
+        break;
+      case 2:
+        e.preventDefault();
+        this.toggleFlag(x, y);
+        break;
+    }
+  }
+
+  cellDblClick(e, x, y) {
+    e.preventDefault();
+    if (this.mobileMode && this.map.labels[y][x] === null) {
+      this.reveal(x, y);
+    } else {
       this.revealAround(x, y);
     }
   }
 
-  cellAltClick(e, x, y) {
-    e.preventDefault();
-    this.revealAround(x, y);
-  }
-
-  cellRightClick(e, x, y) {
-    e.preventDefault();
-    if (this.state === State.PLAYING) {
-      this.toggleFlag(x, y);
-      this.refresh();
-    }
+  cellLongPress(x, y) {
+    this.timeoutId = null;
+    this.toggleFlag(x, y);
   }
 
   revealAround(x, y) {
@@ -232,6 +262,7 @@ class Game {
       this.flags[y][x] = true;
       this.numFlags++;
     }
+    this.refresh();
   }
 
   refresh() {
@@ -655,6 +686,7 @@ function newGame(event) {
   const numMines = parseInt(document.getElementById('numMines').value, 10);
   const debug = document.getElementById('debug').checked;
   const allowOutside = document.getElementById('allowOutside').checked;
+  const mobileMode = document.getElementById('mobileMode').checked;
 
   const gameElement = document.getElementById('game');
   gameElement.innerHTML = '';
@@ -662,6 +694,7 @@ function newGame(event) {
   game.mount(gameElement);
   game.setDebug(debug);
   game.setAllowOutside(allowOutside);
+  game.setMobileMode(mobileMode);
 }
 
 function updateMax() {
@@ -685,6 +718,10 @@ function setDebug(e) {
 
 function setAllowOutside(e) {
   game.setAllowOutside(e.target.checked);
+}
+
+function setMobileMode(e) {
+  game.setMobileMode(e.target.checked);
 }
 
 updateMax();
