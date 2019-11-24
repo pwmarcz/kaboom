@@ -11,6 +11,6 @@
         "eqeqeq": "error",
         "prefer-const": "warn",
         "no-console": "warn",
-        "no-unused-vars": ["error", { "vars": "all", "args": "none" }]
+        "no-unused-vars": ["error", { "vars": "local", "args": "none" }]
     }
 }
