@@ -161,7 +161,7 @@ class Game {
       }
 
       if (outsideIsSafe) {
-        const shape = this.solver.anyShape();
+        const shape = this.solver.anyShapeWithOneEmpty();
         mineGrid = shape.mineGridWithEmpty(x, y);
       } else {
         const shape = this.solver.anyShapeWithRemaining();
@@ -559,6 +559,10 @@ class Solver {
 
   anyShape() {
     return this.shape(this.sat.solve());
+  }
+
+  anyShapeWithOneEmpty() {
+    return this.shape(this.sat.solveWith(() => this.sat.assertCounterAtLeast(this.minMines - this.numCachedTrue + 1)));
   }
 
   anyShapeWithRemaining() {
