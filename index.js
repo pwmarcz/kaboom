@@ -679,18 +679,12 @@ function newGame(event) {
   const width = parseInt(document.getElementById('width').value, 10);
   const height = parseInt(document.getElementById('height').value, 10);
   const numMines = parseInt(document.getElementById('numMines').value, 10);
-  const debug = document.getElementById('debug').checked;
-  const allowOutside = document.getElementById('allowOutside').checked;
-  const safeMode = document.getElementById('safeMode').checked;
 
   const gameElement = document.getElementById('game');
   gameElement.innerHTML = '';
   game = new Game(width, height, numMines);
   game.mount(gameElement);
-  game.setDebug(debug);
-  game.setAllowOutside(allowOutside);
-  game.setSafeMode(safeMode);
-
+  updateSettings();
   updateSize();
 }
 
@@ -722,16 +716,18 @@ function setParams(width, height, numMines) {
   updateMax();
 }
 
-function setDebug(e) {
-  game.setDebug(e.target.checked);
+const SETTINGS = ['debug', 'allowOutside', 'safeMode'];
+
+function updateSettings() {
+  for (const name of SETTINGS) {
+    const val = document.getElementById(name).checked;
+    game[name] = val;
+  }
+  game.refresh();
 }
 
-function setAllowOutside(e) {
-  game.setAllowOutside(e.target.checked);
-}
-
-function setSafeMode(e) {
-  game.setSafeMode(e.target.checked);
+for (const name of SETTINGS) {
+  document.getElementById(name).addEventListener('change', updateSettings);
 }
 
 window.addEventListener('resize', updateSize);
