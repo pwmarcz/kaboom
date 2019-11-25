@@ -69,19 +69,6 @@ class Game {
     this.refresh();
   }
 
-  setDebug(debug) {
-    this.debug = debug;
-    this.refresh();
-  }
-
-  setAllowOutside(allowOutside) {
-    this.allowOutside = allowOutside;
-  }
-
-  setSafeMode(safeMode) {
-    this.safeMode = safeMode;
-  }
-
   cellClick(e, x, y) {
     e.preventDefault();
     if (!this.safeMode) {
