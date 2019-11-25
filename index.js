@@ -28,6 +28,7 @@ class Game {
     this.debug = false;
     this.allowOutside = false;
     this.safeMode = false;
+    this.easy = false;
 
     this.recalc();
   }
@@ -67,19 +68,6 @@ class Game {
     gameElement.appendChild(this.stateElement);
 
     this.refresh();
-  }
-
-  setDebug(debug) {
-    this.debug = debug;
-    this.refresh();
-  }
-
-  setAllowOutside(allowOutside) {
-    this.allowOutside = allowOutside;
-  }
-
-  setSafeMode(safeMode) {
-    this.safeMode = safeMode;
   }
 
   cellClick(e, x, y) {
@@ -153,14 +141,16 @@ class Game {
     if (this.map.boundaryGrid[y][x] === null) {
       // Clicked somewhere outside of boundary.
 
-      let outsideIsSafe;
-      if (this.allowOutside) {
-        outsideIsSafe = this.map.boundary.length === 0 || (!hasSafeCells && this.solver.outsideCanBeSafe());
+      let safe;
+      if (this.easy) {
+        safe = this.solver.outsideCanBeSafe();
+      } else if (this.allowOutside) {
+        safe = this.map.boundary.length === 0 || (!hasSafeCells && this.solver.outsideCanBeSafe());
       } else {
-        outsideIsSafe = this.map.boundary.length === 0 || this.solver.outsideIsSafe() || !hasNonDeadlyCells;
+        safe = this.map.boundary.length === 0 || this.solver.outsideIsSafe() || !hasNonDeadlyCells;
       }
 
-      if (outsideIsSafe) {
+      if (safe) {
         const shape = this.solver.anyShapeWithOneEmpty();
         mineGrid = shape.mineGridWithEmpty(x, y);
       } else {
@@ -172,14 +162,22 @@ class Game {
 
       const idx = this.map.boundaryGrid[y][x];
 
-      let shape;
-      if (this.solver.canBeSafe(idx) && (
-        !this.solver.canBeDangerous(idx) || !hasSafeCells)) {
-        shape = this.solver.anySafeShape(idx);
+      let safe;
+
+      if (this.easy) {
+        safe = this.solver.canBeSafe(idx);
       } else {
-        shape = this.solver.anyDangerousShape(idx);
+        safe = this.solver.canBeSafe(idx) && (
+          !this.solver.canBeDangerous(idx) || !hasSafeCells);
       }
-      mineGrid = shape.mineGrid();
+
+      if (safe) {
+        const shape = this.solver.anySafeShape(idx);
+        mineGrid = shape.mineGrid();
+      } else {
+        const shape = this.solver.anyDangerousShape(idx);
+        mineGrid = shape.mineGrid();
+      }
     }
 
     if (mineGrid[y][x]) {
@@ -716,7 +714,7 @@ function setParams(width, height, numMines) {
   updateMax();
 }
 
-const SETTINGS = ['debug', 'allowOutside', 'safeMode'];
+const SETTINGS = ['debug', 'allowOutside', 'safeMode', 'easy'];
 
 function updateSettings() {
   for (const name of SETTINGS) {
