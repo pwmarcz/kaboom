@@ -1,0 +1,100 @@
+.board {
+    font-size: 0px;
+    white-space: nowrap;
+}
+
+.cell {
+    font-size: 18px;
+    display: inline-block;
+    text-align: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid #999;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+
+    position: relative;
+}
+
+.cell.known {
+    background: #ccc;
+    border-top-color: #ccc;
+    border-left-color: #ccc;
+    font-weight: bold;
+}
+
+.cell.label-1 { color: #0000ff; }
+.cell.label-2 { color: #008100; }
+.cell.label-3 { color: #ee1300; }
+.cell.label-4 { color: #000083; }
+.cell.label-5 { color: #810500; }
+.cell.label-6 { color: #2a9494; }
+.cell.label-7 { color: #000000; }
+.cell.label-8 { color: #808080; }
+
+.cell.unknown {
+    background: #e0e0e0;
+    border-top-color: #fff;
+    border-left-color: #fff;
+    border-right-color: #999;
+    border-bottom-color: #999;
+}
+
+.cell.hint::before {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    bottom: 3px;
+    right: 3px;
+    border: 2px solid;
+    line-height: 18px;
+}
+
+.cell.hint-safe::before { color: #9c9; border-color: #9c9; }
+.cell.hint-unknown::before { color: #da0; border-color: #da0; }
+.cell.hint-mine::before { color: #e77; border-color: #e77; }
+
+.cell.hint-safe::before { content: "."}  /* bullet */
+.cell.hint-unknown::before { content: "?"}  /* bullet */
+.cell.hint-mine::before { content: "!"}  /* multiplication X */
+
+.cell.bomb::before, .cell.bomb-win::before, .cell.flag::before { content: ""; }
+
+.cell::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    line-height: 28px;
+}
+.cell.label-1::after { content: "1"; }
+.cell.label-2::after { content: "2"; }
+.cell.label-3::after { content: "3"; }
+.cell.label-4::after { content: "4"; }
+.cell.label-5::after { content: "5"; }
+.cell.label-6::after { content: "6"; }
+.cell.label-7::after { content: "7"; }
+.cell.label-8::after { content: "8"; }
+.cell.bomb::after { content: "\2716"; }  /* heavy multiplication X */
+.cell.bomb-win::after { content: "\2b24"; }  /* black large circle */
+.cell.flag::after { content: "\2691"; }  /* black flag */
+
+.cell.clickable {
+    cursor: pointer;
+}
+
+.cell.clickable:hover {
+    background: #eee;
+}
+
+.buttons {
+    margin-top: 1em;
+}
+
+h2 {
+    margin-top: 1em;
+}
