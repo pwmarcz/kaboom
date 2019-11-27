@@ -70,6 +70,9 @@
     bottom: 0;
     right: 0;
     line-height: 28px;
+
+    /* Force load SVG */
+    background: url(sprites.svg) -1px -31px;
 }
 .cell.label-1::after { content: "1"; }
 .cell.label-2::after { content: "2"; }
@@ -79,9 +82,20 @@
 .cell.label-6::after { content: "6"; }
 .cell.label-7::after { content: "7"; }
 .cell.label-8::after { content: "8"; }
-.cell.bomb::after { content: "\2716"; }  /* heavy multiplication X */
-.cell.bomb-win::after { content: "\2b24"; }  /* black large circle */
-.cell.flag::after { content: "\2691"; }  /* black flag */
+
+.cell.bomb-win::after {
+    background: url(sprites.svg) -61px -1px;
+}
+
+.cell.flag::after {
+    content: "";
+    background: url(sprites.svg) -31px -1px;
+}
+
+.cell.bomb::after {
+    content: "";
+    background: url(sprites.svg) -1px -1px;
+}
 
 .cell.clickable {
     cursor: pointer;
