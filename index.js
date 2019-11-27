@@ -191,7 +191,7 @@ class Game {
 
     let message;
     if (this.map.boundary.length === 0) {
-      message = 'Just play anywhere!';
+      message = 'You can play anywhere!';
     } else if (this.solver.hasSafeCells()) {
       message = 'There are safe cells.';
     } else if (this.solver.hasNonDeadlyCells()) {
