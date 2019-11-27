@@ -185,6 +185,10 @@ class Game {
   }
 
   hint() {
+    if (this.state !== State.PLAYING) {
+      return;
+    }
+
     let message;
     if (this.map.boundary.length === 0) {
       message = 'Just play anywhere!';
