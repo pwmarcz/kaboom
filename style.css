@@ -112,3 +112,9 @@
 h2 {
     margin-top: 1em;
 }
+
+#hint.hidden {
+    opacity: 0;
+    transition-property: opacity;
+    transition-duration: 1s;
+}

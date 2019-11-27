@@ -66,6 +66,8 @@ class Game {
     this.stateElement = document.createElement('div');
     gameElement.appendChild(this.stateElement);
 
+    this.hintElement = document.getElementById('hint');
+
     this.refresh();
   }
 
@@ -180,6 +182,25 @@ class Game {
 
     this.recalc();
     this.refresh();
+  }
+
+  hint() {
+    let message;
+    if (this.map.boundary.length === 0) {
+      message = 'Just play anywhere!';
+    } else if (this.solver.hasSafeCells()) {
+      message = 'There are safe cells.';
+    } else if (this.solver.hasNonDeadlyCells()) {
+      message = 'There are no safe cells, but you can guess.';
+    } else {
+      message = 'All surrounding cells are deadly. You need to play elsewhere.';
+    }
+
+    this.hintElement.classList.remove('hidden');
+    this.hintElement.innerText = message;
+    setTimeout(() => {
+      this.hintElement.classList.add('hidden');
+    }, 1000);
   }
 
   floodReveal(x, y, mineGrid) {
@@ -701,6 +722,10 @@ function setParams(width, height, numMines) {
   document.getElementById('height').value = height;
   document.getElementById('numMines').value = numMines;
   updateMax();
+}
+
+function hint() {
+  game.hint();
 }
 
 const SETTINGS = ['debug', 'allowOutside', 'safeMode'];
