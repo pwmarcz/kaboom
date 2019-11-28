@@ -190,7 +190,9 @@ class Game {
     }
 
     let message;
-    if (this.map.boundary.length === 0) {
+    if (this.hasWrongFlags()) {
+      message = 'Your flagged something that could be empty.';
+    } else if (this.map.boundary.length === 0) {
       message = 'You can play anywhere!';
     } else if (this.solver.hasSafeCells()) {
       message = 'There are safe cells.';
@@ -205,6 +207,30 @@ class Game {
     setTimeout(() => {
       this.hintElement.classList.add('hidden');
     }, 1000);
+  }
+
+  hasWrongFlags() {
+    if (this.numFlags === 0) {
+      return false;
+    }
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        if (this.flags[y][x]) {
+          const idx = this.map.boundaryGrid[y][x];
+
+          // Flag on boundary.
+          if (idx !== null && this.solver.canBeSafe(idx)) {
+            return true;
+          }
+
+          // Flag outside. Wrong if there is can be an empty square outside.
+          if (idx === null && this.solver.outsideCanBeSafe()) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
   }
 
   floodReveal(x, y, mineGrid) {
