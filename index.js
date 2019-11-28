@@ -191,7 +191,7 @@ class Game {
 
     let message;
     if (this.hasWrongFlags()) {
-      message = 'Your flagged something that could be empty.';
+      message = 'Your flagged a cell that could be empty.';
     } else if (this.map.boundary.length === 0) {
       message = 'You can play anywhere!';
     } else if (this.solver.hasSafeCells()) {
