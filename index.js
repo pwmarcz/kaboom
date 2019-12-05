@@ -22,6 +22,7 @@ class Game {
     this.flags = makeGrid(this.width, this.height, false);
     this.numRevealed = 0;
     this.numFlags = 0;
+    this.undoStack = [];
 
     this.state = State.PLAYING;
 
@@ -125,14 +126,19 @@ class Game {
       return;
     }
 
+    this.undoStack.push([]);
     for (const [x0, y0] of neighbors(x, y, this.width, this.height)) {
-      this.reveal(x0, y0);
+      this.reveal(x0, y0, true);
     }
   }
 
-  reveal(x, y) {
+  reveal(x, y, isAround) {
     if (!(this.state === State.PLAYING && this.map.labels[y][x] === null && !this.flags[y][x])) {
       return;
+    }
+
+    if (!isAround) {
+      this.undoStack.push([]);
     }
 
     const hasSafeCells = this.solver.hasSafeCells();
@@ -241,6 +247,8 @@ class Game {
       }
     }
 
+    this.undoStack[this.undoStack.length-1].push({x: x, y: y, flag: this.flags[y][x]});
+
     if (this.flags[y][x]) {
       this.flags[y][x] = false;
       this.numFlags--;
@@ -261,6 +269,34 @@ class Game {
         }
       }
     }
+  }
+
+  undo() {
+    if (this.undoStack.length === 0) {
+      return;
+    }
+    const undos = this.undoStack.pop();
+    for (const undo of undos) {
+      this.map.labels[undo.y][undo.x] = null;
+      this.numRevealed--;
+
+      if (undo.flag) {
+        this.flags[undo.y][undo.x] = true;
+        this.numFlags++;
+      }
+    }
+
+    if (this.state === State.WIN || this.state === State.DEAD) {
+      this.state = State.PLAYING;
+      this.mineGrid = null;
+      this.deathX = null;
+      this.deathY = null;
+    }
+
+    this.map.resetCache();
+
+    this.recalc();
+    this.refresh();
   }
 
   recalc() {
@@ -407,6 +443,10 @@ class LabelMap {
   getCache(i) {
     const [x, y] = this.boundary[i];
     return this.cache[y][x];
+  }
+
+  resetCache() {
+    this.cache = makeGrid(this.width, this.height, null);
   }
 }
 
@@ -756,6 +796,10 @@ function setParams(width, height, numMines) {
 
 function hint() {
   game.hint();
+}
+
+function undo() {
+  game.undo();
 }
 
 const SETTINGS = ['debug', 'allowOutside', 'safeMode'];
