@@ -388,6 +388,9 @@ class Game {
         break;
     }
     this.stateElement.textContent = message;
+
+    const undoElement = document.getElementById('undo');
+    undoElement.disabled = !(this.debug || this.state === State.DEAD);
   }
 }
 
