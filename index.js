@@ -150,7 +150,7 @@ class Game {
 
       let outsideIsSafe;
       if (this.allowOutside) {
-        outsideIsSafe = this.map.boundary.length === 0 || (!hasSafeCells && this.solver.outsideCanBeSafe());
+        outsideIsSafe = this.map.boundary.length === 0 || this.solver.outsideIsSafe() || (!hasSafeCells && this.solver.outsideCanBeSafe());
       } else {
         outsideIsSafe = this.map.boundary.length === 0 || this.solver.outsideIsSafe() || !hasNonDeadlyCells;
       }
