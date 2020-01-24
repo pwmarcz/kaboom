@@ -20,7 +20,7 @@ class Game {
     this.map = new LabelMap(this.width, this.height);
     //this.mines = makeGrid(this.width, this.height, false);
     this.flags = makeGrid(this.width, this.height, false);
-	this.flagAdjacency = makeGrid(this.width, this.height, 0);
+    this.flagAdjacency = makeGrid(this.width, this.height, 0);
     this.numRevealed = 0;
     this.numFlags = 0;
     this.undoStack = [];
@@ -30,7 +30,7 @@ class Game {
     this.debug = false;
     this.allowOutside = false;
     this.safeMode = false;
-	this.mineCountDown = false;
+    this.mineCountDown = false;
 
     this.recalc();
   }
@@ -325,11 +325,11 @@ class Game {
   }
   
   modAround(x, y, mod) {
-	  for(let i = Math.max(x-1, 0); i < Math.min(x+2, this.width); ++i) {
-		  for(let j = Math.max(y-1, 0); j < Math.min(y+2, this.height); ++j)  {
-			  this.flagAdjacency[j][i] += mod;
-		  }
-	  }
+      for(let i = Math.max(x-1, 0); i < min(x+2, this.width); ++i) {
+          for(let j = Math.max(y-1, 0); j < min(y+2, this.height); ++j)  {
+              this.flagAdjacency[j][i] += mod;
+          }
+      }
   }
 
   toggleFlag(x, y) {
@@ -339,13 +339,13 @@ class Game {
     if (this.flags[y][x]) {
       this.flags[y][x] = false;
       this.numFlags--;
-	  this.modAround(x,y,-1);
+      this.modAround(x,y,-1);
     } else {
       this.flags[y][x] = true;
       this.numFlags++;
-	  this.modAround(x,y,1);
+      this.modAround(x,y,1);
     }
-	
+    
     this.refresh();
   }
 
@@ -353,7 +353,7 @@ class Game {
     for (let y = 0; y < this.height; y++) {
       for (let x = 0; x < this.width; x++) {
         const label = this.map.labels[y][x];
-		const modifier = this.flagAdjacency[y][x];
+        const modifier = this.flagAdjacency[y][x];
         const mine = this.mineGrid && this.mineGrid[y][x];
         const flag = this.flags[y][x];
         const hint = this.hints[y][x];
@@ -366,12 +366,12 @@ class Game {
         } else if (this.state === State.WIN && mine) {
           className = 'unknown bomb-win';
         } else if (label !== null && label > 0) {
-			if (this.mineCountDown) { 
-				const modLabel = label - modifier;
-				className = `known label-${modLabel}`;
-			} else {
-				className = `known label-${label}`;
-			}
+            if (this.mineCountDown) { 
+                const modLabel = label - modifier;
+                className = `known label-${modLabel}`;
+            } else {
+                className = `known label-${label}`;
+            }
         } else if (label === 0) {
           className = 'known';
         } else if (flag) {
