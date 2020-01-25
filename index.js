@@ -22,7 +22,6 @@ class Game {
     this.flags = makeGrid(this.width, this.height, false);
     this.unsure = makeGrid(this.width, this.height, false);
     this.numRevealed = 0;
-    this.numFlags = 0;
     this.undoStack = [];
 
     this.state = State.PLAYING;
@@ -218,9 +217,6 @@ class Game {
   }
 
   hasWrongFlags() {
-    if (this.numFlags === 0) {
-      return false;
-    }
     for (let y = 0; y < this.height; y++) {
       for (let x = 0; x < this.width; x++) {
         if (this.flags[y][x]) {
@@ -252,11 +248,7 @@ class Game {
     this.undoStack[this.undoStack.length-1].push({
       x: x, y: y, flag: this.flags[y][x], unsure: this.unsure[y][x]});
 
-    if (this.flags[y][x]) {
-      this.flags[y][x] = false;
-      this.numFlags--;
-    }
-
+    this.flags[y][x] = false;
     this.unsure[y][x] = false;
 
     this.map.labels[y][x] = n;
@@ -285,11 +277,7 @@ class Game {
       this.map.labels[undo.y][undo.x] = null;
       this.numRevealed--;
 
-      if (undo.flag) {
-        this.flags[undo.y][undo.x] = true;
-        this.numFlags++;
-      }
-
+      this.flags[undo.y][undo.x] = undo.flag;
       this.unsure[undo.y][undo.x] = undo.unsure;
     }
 
@@ -338,10 +326,8 @@ class Game {
     } else if (this.flags[y][x]) {
       this.flags[y][x] = false;
       this.unsure[y][x] = true;
-      this.numFlags--;
     } else {
       this.flags[y][x] = true;
-      this.numFlags++;
     }
 
     this.refresh();
@@ -352,6 +338,18 @@ class Game {
     for (const [x0, y0] of neighbors(x, y, this.width, this.height)) {
       if (this.flags[y0][x0]) {
         result++;
+      }
+    }
+    return result;
+  }
+
+  countFlags() {
+    let result = 0;
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        if (this.flags[y][x]) {
+          result++;
+        }
       }
     }
     return result;
@@ -402,11 +400,13 @@ class Game {
 
     let message;
     switch (this.state) {
-      case State.PLAYING:
-        message = `Mines: ${this.numFlags}/${this.numMines}`;
+      case State.PLAYING: {
+        const numFlags = this.countFlags();
+        message = `Mines: ${numFlags}/${this.numMines}`;
         if (this.debug) {
           message += ', ' + this.solver.debugMessage();
         }
+      }
 
         break;
       case State.WIN:
