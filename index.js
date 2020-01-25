@@ -325,11 +325,9 @@ class Game {
   }
   
   modAround(x, y, mod) {
-      for(let i = Math.max(x-1, 0); i < Math.min(x+2, this.width); ++i) {
-          for(let j = Math.max(y-1, 0); j < Math.min(y+2, this.height); ++j)  {
-              this.flagAdjacency[j][i] += mod;
-          }
-      }
+    for (const [x0, y0] of neighbors(x, y, this.width, this.height)) {
+        this.flagAdjacency[y0][x0] += mod;
+    }
   }
 
   toggleFlag(x, y) {
@@ -414,11 +412,9 @@ class Game {
 }
 
 function* neighbors(x, y, width, height) {
-  for (let y0 = y - 1; y0 <= y + 1; y0++) {
-    for (let x0 = x - 1; x0 <= x + 1; x0++) {
-      if (0 <= x0 && x0 < width &&
-        0 <= y0 && y0 < height &&
-        (y0 !== y || x0 !== x)) {
+  for (let y0 = Math.max(y - 1, 0); y0 < Math.min(y + 2, height) ; y0++) {
+    for (let x0 = Math.max(x - 1, 0); x0 < Math.min(x + 2, width); x0++) {
+        if (y0 !== y || x0 !== x) {
           yield [x0, y0];
         }
     }
