@@ -23,15 +23,27 @@
     border-left-color: #ccc;
     font-weight: bold;
 }
-
-.cell.label-1 { color: #0000ff; }
-.cell.label-2 { color: #008100; }
-.cell.label-3 { color: #ee1300; }
-.cell.label-4 { color: #000083; }
-.cell.label-5 { color: #810500; }
-.cell.label-6 { color: #2a9494; }
-.cell.label-7 { color: #000000; }
-.cell.label-8 { color: #808080; }
+.cell.label--7 { color: #ff0000; }
+.cell.label--6 { color: #ff0000; }
+.cell.label--5 { color: #ff0000; }
+.cell.label--4 { color: #ff0000; }
+.cell.label--3 { color: #ff0000; }
+.cell.label--2 { color: #ff0000; }
+.cell.label--1 { color: #ff0000; }
+.cell.label-0  {
+    background: #aaa;
+    border-top-color: #aaa;
+    border-left-color: #aaa;
+    color: #070707;
+}
+.cell.label-1  { color: #0000ff; }
+.cell.label-2  { color: #008100; }
+.cell.label-3  { color: #ee1300; }
+.cell.label-4  { color: #000083; }
+.cell.label-5  { color: #810500; }
+.cell.label-6  { color: #2a9494; }
+.cell.label-7  { color: #000000; }
+.cell.label-8  { color: #808080; }
 
 .cell.unknown {
     background: #e0e0e0;
@@ -74,14 +86,22 @@
     /* Force load SVG */
     background: url(sprites.svg) -1px -31px;
 }
-.cell.label-1::after { content: "1"; }
-.cell.label-2::after { content: "2"; }
-.cell.label-3::after { content: "3"; }
-.cell.label-4::after { content: "4"; }
-.cell.label-5::after { content: "5"; }
-.cell.label-6::after { content: "6"; }
-.cell.label-7::after { content: "7"; }
-.cell.label-8::after { content: "8"; }
+.cell.label--7::after { content: "-7"; }
+.cell.label--6::after { content: "-6"; }
+.cell.label--5::after { content: "-5"; }
+.cell.label--4::after { content: "-4"; }
+.cell.label--3::after { content: "-3"; }
+.cell.label--2::after { content: "-2"; }
+.cell.label--1::after { content: "-1"; }
+.cell.label-0::after  { content:  "0"; }
+.cell.label-1::after  { content:  "1"; }
+.cell.label-2::after  { content:  "2"; }
+.cell.label-3::after  { content:  "3"; }
+.cell.label-4::after  { content:  "4"; }
+.cell.label-5::after  { content:  "5"; }
+.cell.label-6::after  { content:  "6"; }
+.cell.label-7::after  { content:  "7"; }
+.cell.label-8::after  { content:  "8"; }
 
 .cell.bomb-win::after {
     background: url(sprites.svg) -61px -1px;

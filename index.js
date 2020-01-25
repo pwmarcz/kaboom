@@ -29,6 +29,7 @@ class Game {
     this.debug = false;
     this.allowOutside = false;
     this.safeMode = false;
+    this.countdownMode = false;
 
     this.recalc();
   }
@@ -333,7 +334,18 @@ class Game {
       this.flags[y][x] = true;
       this.numFlags++;
     }
+
     this.refresh();
+  }
+
+  countFlagsAround(x, y) {
+    let result = 0;
+    for (const [x0, y0] of neighbors(x, y, this.width, this.height)) {
+      if (this.flags[y0][x0]) {
+        result++;
+      }
+    }
+    return result;
   }
 
   refresh() {
@@ -352,7 +364,12 @@ class Game {
         } else if (this.state === State.WIN && mine) {
           className = 'unknown bomb-win';
         } else if (label !== null && label > 0) {
-          className = `known label-${label}`;
+            if (this.countdownMode) {
+                const modLabel = label - this.countFlagsAround(x, y);
+                className = `known label-${modLabel}`;
+            } else {
+                className = `known label-${label}`;
+            }
         } else if (label === 0) {
           className = 'known';
         } else if (flag) {
@@ -395,11 +412,9 @@ class Game {
 }
 
 function* neighbors(x, y, width, height) {
-  for (let y0 = y - 1; y0 <= y + 1; y0++) {
-    for (let x0 = x - 1; x0 <= x + 1; x0++) {
-      if (0 <= x0 && x0 < width &&
-        0 <= y0 && y0 < height &&
-        (y0 !== y || x0 !== x)) {
+  for (let y0 = Math.max(y - 1, 0); y0 < Math.min(y + 2, height) ; y0++) {
+    for (let x0 = Math.max(x - 1, 0); x0 < Math.min(x + 2, width); x0++) {
+        if (y0 !== y || x0 !== x) {
           yield [x0, y0];
         }
     }
@@ -790,10 +805,11 @@ function updateMax() {
   }
 }
 
-function setParams(width, height, numMines) {
+function setParams(width, height, numMines, countdownMode) {
   document.getElementById('width').value = width;
   document.getElementById('height').value = height;
   document.getElementById('numMines').value = numMines;
+  document.getElementById('countdownMode').value = countdownMode;
   updateMax();
 }
 
@@ -805,7 +821,7 @@ function undo() {
   game.undo();
 }
 
-const SETTINGS = ['debug', 'allowOutside', 'safeMode'];
+const SETTINGS = ['debug', 'allowOutside', 'safeMode', 'countdownMode'];
 
 function updateSettings() {
   for (const name of SETTINGS) {
