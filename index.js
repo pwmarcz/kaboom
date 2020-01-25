@@ -20,7 +20,6 @@ class Game {
     this.map = new LabelMap(this.width, this.height);
     //this.mines = makeGrid(this.width, this.height, false);
     this.flags = makeGrid(this.width, this.height, false);
-    this.flagAdjacency = makeGrid(this.width, this.height, 0);
     this.numRevealed = 0;
     this.numFlags = 0;
     this.undoStack = [];
@@ -324,12 +323,6 @@ class Game {
     }
   }
 
-  modAround(x, y, mod) {
-    for (const [x0, y0] of neighbors(x, y, this.width, this.height)) {
-        this.flagAdjacency[y0][x0] += mod;
-    }
-  }
-
   toggleFlag(x, y) {
     if (!(this.state === State.PLAYING && this.map.labels[y][x] === null)) {
       return;
@@ -337,21 +330,28 @@ class Game {
     if (this.flags[y][x]) {
       this.flags[y][x] = false;
       this.numFlags--;
-      this.modAround(x,y,-1);
     } else {
       this.flags[y][x] = true;
       this.numFlags++;
-      this.modAround(x,y,1);
     }
 
     this.refresh();
+  }
+
+  countFlagsAround(x, y) {
+    let result = 0;
+    for (const [x0, y0] of neighbors(x, y, this.width, this.height)) {
+      if (this.flags[y0][x0]) {
+        result++;
+      }
+    }
+    return result;
   }
 
   refresh() {
     for (let y = 0; y < this.height; y++) {
       for (let x = 0; x < this.width; x++) {
         const label = this.map.labels[y][x];
-        const modifier = this.flagAdjacency[y][x];
         const mine = this.mineGrid && this.mineGrid[y][x];
         const flag = this.flags[y][x];
         const hint = this.hints[y][x];
@@ -365,7 +365,7 @@ class Game {
           className = 'unknown bomb-win';
         } else if (label !== null && label > 0) {
             if (this.countdownMode) {
-                const modLabel = label - modifier;
+                const modLabel = label - this.countFlagsAround(x, y);
                 className = `known label-${modLabel}`;
             } else {
                 className = `known label-${label}`;
