@@ -20,6 +20,7 @@ class Game {
     this.map = new LabelMap(this.width, this.height);
     //this.mines = makeGrid(this.width, this.height, false);
     this.flags = makeGrid(this.width, this.height, false);
+    this.unsure = makeGrid(this.width, this.height, false);
     this.numRevealed = 0;
     this.numFlags = 0;
     this.undoStack = [];
@@ -248,12 +249,15 @@ class Game {
       }
     }
 
-    this.undoStack[this.undoStack.length-1].push({x: x, y: y, flag: this.flags[y][x]});
+    this.undoStack[this.undoStack.length-1].push({
+      x: x, y: y, flag: this.flags[y][x], unsure: this.unsure[y][x]});
 
     if (this.flags[y][x]) {
       this.flags[y][x] = false;
       this.numFlags--;
     }
+
+    this.unsure[y][x] = false;
 
     this.map.labels[y][x] = n;
     this.numRevealed++;
@@ -285,6 +289,8 @@ class Game {
         this.flags[undo.y][undo.x] = true;
         this.numFlags++;
       }
+
+      this.unsure[undo.y][undo.x] = undo.unsure;
     }
 
     if (this.state === State.WIN || this.state === State.DEAD) {
@@ -327,8 +333,11 @@ class Game {
     if (!(this.state === State.PLAYING && this.map.labels[y][x] === null)) {
       return;
     }
-    if (this.flags[y][x]) {
+    if (this.unsure[y][x]) {
+      this.unsure[y][x] = false;
+    } else if (this.flags[y][x]) {
       this.flags[y][x] = false;
+      this.unsure[y][x] = true;
       this.numFlags--;
     } else {
       this.flags[y][x] = true;
@@ -354,6 +363,7 @@ class Game {
         const label = this.map.labels[y][x];
         const mine = this.mineGrid && this.mineGrid[y][x];
         const flag = this.flags[y][x];
+        const unsure = this.unsure[y][x];
         const hint = this.hints[y][x];
 
         let className;
@@ -374,6 +384,8 @@ class Game {
           className = 'known';
         } else if (flag) {
           className = 'unknown clickable flag';
+        } else if (unsure) {
+          className = 'unknown clickable unsure';
         } else if (this.state === State.PLAYING) {
           className = 'unknown clickable';
         } else {

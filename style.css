@@ -112,6 +112,11 @@
     background: url(sprites.svg) -31px -1px;
 }
 
+.cell.unsure::after {
+    content: "?";
+    font-weight: bold;
+}
+
 .cell.bomb::after {
     content: "";
     background: url(sprites.svg) -1px -1px;
