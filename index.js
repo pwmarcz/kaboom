@@ -30,7 +30,7 @@ class Game {
     this.debug = false;
     this.allowOutside = false;
     this.safeMode = false;
-    this.mineCountDown = false;
+    this.countdownMode = false;
 
     this.recalc();
   }
@@ -323,7 +323,7 @@ class Game {
       this.hints[y][x] = hint;
     }
   }
-  
+
   modAround(x, y, mod) {
     for (const [x0, y0] of neighbors(x, y, this.width, this.height)) {
         this.flagAdjacency[y0][x0] += mod;
@@ -343,7 +343,7 @@ class Game {
       this.numFlags++;
       this.modAround(x,y,1);
     }
-    
+
     this.refresh();
   }
 
@@ -364,7 +364,7 @@ class Game {
         } else if (this.state === State.WIN && mine) {
           className = 'unknown bomb-win';
         } else if (label !== null && label > 0) {
-            if (this.mineCountDown) { 
+            if (this.countdownMode) {
                 const modLabel = label - modifier;
                 className = `known label-${modLabel}`;
             } else {
@@ -805,11 +805,11 @@ function updateMax() {
   }
 }
 
-function setParams(width, height, numMines, mineCountDown) {
+function setParams(width, height, numMines, countdownMode) {
   document.getElementById('width').value = width;
   document.getElementById('height').value = height;
   document.getElementById('numMines').value = numMines;
-  document.getElementById('mineCountDown').value = mineCountDown;
+  document.getElementById('countdownMode').value = countdownMode;
   updateMax();
 }
 
@@ -821,7 +821,7 @@ function undo() {
   game.undo();
 }
 
-const SETTINGS = ['debug', 'allowOutside', 'safeMode', 'mineCountDown'];
+const SETTINGS = ['debug', 'allowOutside', 'safeMode', 'countdownMode'];
 
 function updateSettings() {
   for (const name of SETTINGS) {
