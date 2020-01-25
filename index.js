@@ -325,8 +325,8 @@ class Game {
   }
   
   modAround(x, y, mod) {
-      for(let i = Math.max(x-1, 0); i < min(x+2, this.width); ++i) {
-          for(let j = Math.max(y-1, 0); j < min(y+2, this.height); ++j)  {
+      for(let i = Math.max(x-1, 0); i < Math.min(x+2, this.width); ++i) {
+          for(let j = Math.max(y-1, 0); j < Math.min(y+2, this.height); ++j)  {
               this.flagAdjacency[j][i] += mod;
           }
       }
