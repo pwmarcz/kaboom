@@ -30,6 +30,12 @@
 .cell.label--3 { color: #ff0000; }
 .cell.label--2 { color: #ff0000; }
 .cell.label--1 { color: #ff0000; }
+.cell.label-solved { 
+    background: #888;
+    border-top-color: #888;
+    border-left-color: #888;
+    color: #050505;
+}
 .cell.label-0  {
     background: #aaa;
     border-top-color: #aaa;
@@ -93,6 +99,7 @@
 .cell.label--3::after { content: "-3"; }
 .cell.label--2::after { content: "-2"; }
 .cell.label--1::after { content: "-1"; }
+.cell.label-solved::after { content: "0"; }
 .cell.label-0::after  { content:  "0"; }
 .cell.label-1::after  { content:  "1"; }
 .cell.label-2::after  { content:  "2"; }
