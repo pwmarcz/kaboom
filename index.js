@@ -445,24 +445,41 @@ class LabelMap {
   recalc() {
     this.boundary = [];
     this.boundaryGrid = makeGrid(this.width, this.height, null);
-    this.numOutside = 0;
+    let revealedSquares = 0;
     for (let y = 0; y < this.height; y++) {
       for (let x = 0; x < this.width; x++) {
-        if (this.labels[y][x] === null) {
+        // Create the boundary and cache trivially solvable mines
+        if (this.labels[y][x] !== null) {
+          revealedSquares++;
+          // For each labeled revealed square, collect its unknown neighbors and
+          // ensure they all have boundary ids.
+          let neighboringBoundary = [];
           for (const [x0, y0] of neighbors(x, y, this.width, this.height)) {
-            if (this.labels[y0][x0] !== null) {
-              this.boundaryGrid[y][x] = this.boundary.length;
-              this.boundary.push([x, y]);
-              break;
+            if (this.labels[y0][x0] === null) {
+              let boundaryId = this.boundaryGrid[y0][x0];
+              if (boundaryId === null) {
+                boundaryId = this.boundaryGrid[y0][x0] = this.boundary.length;
+                this.boundary.push([x0, y0]);
+              }
+              neighboringBoundary.push(boundaryId);
             }
           }
-
-          if (this.boundaryGrid[y][x] === null) {
-            this.numOutside++;
+          // If this label isn't already marked as solved and it trivially
+          // proves all adjacent boundary squares to be mines, mark this
+          // square as solved and all the adjacent boundary squares as mines.
+          if (this.cache[y][x] !== true
+              && neighboringBoundary.length === this.labels[y][x]) {
+            this.cache[y][x] = true;
+            for (const trivialMineId of neighboringBoundary) {
+              this.setCache(trivialMineId, true);
+            }
           }
         }
       }
     }
+    this.numOutside = (this.width * this.height)
+                      - revealedSquares
+                      - this.boundary.length;
   }
 
   setCache(i, val) {
