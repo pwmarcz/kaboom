@@ -31,6 +31,7 @@ class Game {
     this.safeMode = false;
     this.countdownMode = false;
 
+    this.lastDuration = 0;
     this.recalc();
   }
 
@@ -295,6 +296,8 @@ class Game {
   }
 
   recalc() {
+    const timeStart = new Date();
+
     this.map.recalc();
     this.solver = makeSolver(this.map, this.numMines);
     this.shapes = this.solver.shapes;
@@ -315,6 +318,9 @@ class Game {
       }
       this.hints[y][x] = hint;
     }
+
+    const timeEnd = new Date();
+    this.lastDuration = timeEnd - timeStart;
   }
 
   toggleFlag(x, y) {
@@ -405,6 +411,7 @@ class Game {
         message = `Mines: ${numFlags}/${this.numMines}`;
         if (this.debug) {
           message += ', ' + this.solver.debugMessage();
+          message += `, time: ${this.lastDuration/1000} s`;
         }
       }
 
