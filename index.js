@@ -458,25 +458,29 @@ class LabelMap {
         // Create the boundary and cache trivially solvable mines
         if (this.labels[y][x] !== null) {
           revealedSquares++;
+
           // For each labeled revealed square, collect its unknown neighbors and
           // ensure they all have boundary ids.
-          let neighboringBoundary = [];
+          const neighboringBoundary = [];
+          let hasUncached = false;
           for (const [x0, y0] of neighbors(x, y, this.width, this.height)) {
             if (this.labels[y0][x0] === null) {
               let boundaryId = this.boundaryGrid[y0][x0];
               if (boundaryId === null) {
                 boundaryId = this.boundaryGrid[y0][x0] = this.boundary.length;
                 this.boundary.push([x0, y0]);
+                hasUncached = true;
+              }
+              if (!hasUncached && this.cache[y0][x0] === null) {
+                hasUncached = true;
               }
               neighboringBoundary.push(boundaryId);
             }
           }
-          // If this label isn't already marked as solved and it trivially
-          // proves all adjacent boundary squares to be mines, mark this
-          // square as solved and all the adjacent boundary squares as mines.
-          if (this.cache[y][x] !== true
-              && neighboringBoundary.length === this.labels[y][x]) {
-            this.cache[y][x] = true;
+          // If this label trivially proves all adjacent boundary squares to be
+          // mines, mark them as such.
+          if (neighboringBoundary.length === this.labels[y][x] &&
+              hasUncached) {
             for (const trivialMineId of neighboringBoundary) {
               this.setCache(trivialMineId, true);
             }
