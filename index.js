@@ -348,7 +348,7 @@ class Game {
     }
     return result;
   }
-
+  
   countFlags() {
     let result = 0;
     for (let y = 0; y < this.height; y++) {
@@ -359,6 +359,35 @@ class Game {
       }
     }
     return result;
+  }
+
+   // all adjacent tiles are flagged and revealed (not necessarily solved)
+  isComplete(x, y) {
+    for (const [x0, y0] of neighbors(x, y, this.width, this.height)) {
+      if (this.map.labels[y0][x0] === null && !this.flags[y0][x0]) {
+        return false;
+      }
+    }
+    return true;
+  }
+  
+  labeledTile(x, y, label)
+  {
+    // TODO: can a stylesheet be adjusted to lowlight any tile?
+    // not just hard-coded to just 0 in countdownMode
+    // Maybe create an overlay, instead...
+    
+    if (this.countdownMode) {
+      const flagsAround = this.countFlagsAround(x, y);
+     
+      if( flagsAround === label && this.isComplete(x,y) ) {
+        return `known label-solved`;
+      } else{
+        return`known label-${label - flagsAround}`;
+      }
+    } else {
+      return `known label-${label}`;
+    }
   }
 
   refresh() {
@@ -378,12 +407,7 @@ class Game {
         } else if (this.state === State.WIN && mine) {
           className = 'unknown bomb-win';
         } else if (label !== null && label > 0) {
-            if (this.countdownMode) {
-                const modLabel = label - this.countFlagsAround(x, y);
-                className = `known label-${modLabel}`;
-            } else {
-                className = `known label-${label}`;
-            }
+          className = this.labeledTile(x, y, label);
         } else if (label === 0) {
           className = 'known';
         } else if (flag) {
