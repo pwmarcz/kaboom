@@ -30,6 +30,7 @@ class Game {
     this.allowOutside = false;
     this.safeMode = false;
     this.countdownMode = false;
+    this.questionMarkingDisabled = false;
 
     this.lastDuration = 0;
     this.recalc();
@@ -331,7 +332,9 @@ class Game {
       this.unsure[y][x] = false;
     } else if (this.flags[y][x]) {
       this.flags[y][x] = false;
-      this.unsure[y][x] = true;
+      if (!this.questionMarkingDisabled) {
+        this.unsure[y][x] = true;
+      }
     } else {
       this.flags[y][x] = true;
     }
@@ -861,7 +864,7 @@ function undo() {
   game.undo();
 }
 
-const SETTINGS = ['debug', 'allowOutside', 'safeMode', 'countdownMode'];
+const SETTINGS = ['debug', 'allowOutside', 'safeMode', 'countdownMode', 'questionMarkingDisabled'];
 
 function updateSettings() {
   for (const name of SETTINGS) {
