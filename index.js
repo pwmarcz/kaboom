@@ -143,7 +143,7 @@ class Game {
       this.undoStack.push([]);
     }
 
-    const hasSafeCells = this.solver.hasSafeCells();
+    const hasSafeCells = this.solver.hasSafeCells() || this.solver.outsideIsSafe();
     const hasNonDeadlyCells = this.solver.hasNonDeadlyCells();
 
     let mineGrid;
@@ -203,7 +203,9 @@ class Game {
     } else if (this.map.boundary.length === 0) {
       message = 'You can play anywhere!';
     } else if (this.solver.hasSafeCells()) {
-      message = 'There are safe cells.';
+      message = 'There are safe surrounding cells.';
+    } else if (this.solver.outsideIsSafe()) {
+      message = 'There are safe non-surrounding cells.';
     } else if (this.solver.hasNonDeadlyCells()) {
       message = 'There are no safe cells, but you can guess.';
     } else {
